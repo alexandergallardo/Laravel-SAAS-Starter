@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Search } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface User {
@@ -107,6 +107,10 @@ export default function ImpersonationLogs({ logs, filters }: ImpersonationLogsPr
                             Immutable audit trail of super-admins impersonating users.
                         </p>
                     </div>
+                    <Button variant="outline" size="sm" onClick={() => (window.location.href = '/admin/impersonation-logs/export')}>
+                        <Download className="mr-2 h-4 w-4" />
+                        Export CSV
+                    </Button>
                 </div>
 
                 <Card>

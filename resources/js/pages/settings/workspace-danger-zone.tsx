@@ -8,13 +8,26 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { useTranslations } from '@/hooks/use-translations';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import WorkspaceLayout from '@/layouts/settings/workspace-layout';
 import { type BreadcrumbItem, type WorkspaceRole } from '@/types';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { AlertTriangle, LogOut, ShieldAlert, Trash2, Users } from 'lucide-react';
 import { useState } from 'react';
+
+interface Admin {
+    id: number;
+    name: string;
+    email: string;
+}
 
 interface WorkspaceDangerZoneProps {
     workspace: {
@@ -24,6 +37,7 @@ interface WorkspaceDangerZoneProps {
         owner_id: number;
     };
     userRole: WorkspaceRole;
+    admins: Admin[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -31,7 +45,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Danger Zone', href: '/settings/workspace-danger-zone' },
 ];
 
-export default function WorkspaceDangerZone({ workspace, userRole }: WorkspaceDangerZoneProps) {
+export default function WorkspaceDangerZone({ workspace, userRole, admins }: WorkspaceDangerZoneProps) {
     const { t } = useTranslations();
     const { props } = usePage();
     const flash = props.flash as { error?: string; success?: string } | undefined;
@@ -39,6 +53,13 @@ export default function WorkspaceDangerZone({ workspace, userRole }: WorkspaceDa
     const [deleteConfirm, setDeleteConfirm] = useState('');
     const [showDeleteForm, setShowDeleteForm] = useState(false);
     const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+    const [transferUserId, setTransferUserId] = useState('');
+    const [showTransferConfirm, setShowTransferConfirm] = useState(false);
+
+    const handleTransfer = () => {
+        if (!transferUserId) return;
+        router.post(`/team/transfer-ownership/${transferUserId}`, {}, { preserveScroll: true, onSuccess: () => setShowTransferConfirm(false) });
+    };
 
     const handleDelete = () => {
         if (deleteConfirm !== workspace.name) {
@@ -55,7 +76,7 @@ export default function WorkspaceDangerZone({ workspace, userRole }: WorkspaceDa
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('danger_zone.title', 'Danger Zone')} />
 
-            <SettingsLayout
+            <WorkspaceLayout
                 title={t('danger_zone.title', 'Danger Zone')}
                 description={t('danger_zone.description', 'Irreversible actions for this workspace. Please proceed with caution.')}
             >
@@ -80,11 +101,43 @@ export default function WorkspaceDangerZone({ workspace, userRole }: WorkspaceDa
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <Button variant="outline" asChild>
-                                    <Link href="/team">
-                                        {t('danger_zone.go_to_team', 'Manage Team & Transfer')}
-                                    </Link>
-                                </Button>
+                                {admins.length === 0 ? (
+                                    <p className="text-muted-foreground text-sm">
+                                        {t('danger_zone.no_admins', 'No admins available. Promote a member to Admin first.')}
+                                    </p>
+                                ) : !showTransferConfirm ? (
+                                    <div className="flex items-center gap-3">
+                                        <Select value={transferUserId} onValueChange={setTransferUserId}>
+                                            <SelectTrigger className="w-64">
+                                                <SelectValue placeholder={t('danger_zone.select_admin', 'Select an admin...')} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {admins.map((admin) => (
+                                                    <SelectItem key={admin.id} value={String(admin.id)}>
+                                                        {admin.name} ({admin.email})
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <Button variant="outline" disabled={!transferUserId} onClick={() => setShowTransferConfirm(true)}>
+                                            {t('danger_zone.transfer', 'Transfer')}
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        <p className="text-sm text-amber-700 dark:text-amber-400">
+                                            {t('danger_zone.transfer_confirm', 'Are you sure? You will lose owner privileges immediately.')}
+                                        </p>
+                                        <div className="flex gap-2">
+                                            <Button variant="destructive" size="sm" onClick={handleTransfer}>
+                                                {t('danger_zone.confirm_transfer', 'Yes, Transfer Ownership')}
+                                            </Button>
+                                            <Button variant="outline" size="sm" onClick={() => setShowTransferConfirm(false)}>
+                                                {t('common.cancel', 'Cancel')}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     )}
@@ -217,7 +270,7 @@ export default function WorkspaceDangerZone({ workspace, userRole }: WorkspaceDa
                         </Card>
                     )}
                 </div>
-            </SettingsLayout>
+            </WorkspaceLayout>
         </AppLayout>
     );
 }

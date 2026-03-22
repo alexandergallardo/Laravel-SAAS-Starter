@@ -14,7 +14,7 @@ import { useToast } from '@/components/ui/toast';
 import { useTranslations } from '@/hooks/use-translations';
 import http from '@/lib/http';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import WorkspaceLayout from '@/layouts/settings/workspace-layout';
 import { type BreadcrumbItem, type Plan, type WorkspaceRole } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { Check, Sparkles } from 'lucide-react';
@@ -158,7 +158,7 @@ export default function PlansPage({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('billing.plans.title', 'Pricing Plans')} />
 
-            <SettingsLayout
+            <WorkspaceLayout
                 title={t('billing.plans.title', 'Pricing Plans')}
                 description={t('billing.plans.description', 'Choose the plan that best fits your needs.')}
                 fullWidth
@@ -381,7 +381,7 @@ export default function PlansPage({
                         </Card>
                     )}
                 </div>
-            </SettingsLayout>
+            </WorkspaceLayout>
         </AppLayout>
     );
 }

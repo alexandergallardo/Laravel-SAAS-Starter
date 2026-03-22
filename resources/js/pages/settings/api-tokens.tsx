@@ -3,7 +3,7 @@ import { Head, useForm, usePage } from '@inertiajs/react';
 import { Trash2 } from 'lucide-react';
 
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import ProfileLayout from '@/layouts/settings/profile-layout';
 import { useTranslations } from '@/hooks/use-translations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,7 +61,7 @@ export default function ApiTokens({ tokens }: { tokens: Token[] }) {
         <AppLayout breadcrumbs={[{ title: t('settings.api_tokens', 'API Tokens'), href: '/settings/api-tokens' }]}>
             <Head title={t('settings.api_tokens', 'API Tokens')} />
 
-            <SettingsLayout
+            <ProfileLayout
                 title={t('settings.api_tokens', 'API Tokens')}
                 description={t('settings.api_tokens.description', 'Manage personal access tokens for API access.')}
                 fullWidth
@@ -167,7 +167,7 @@ export default function ApiTokens({ tokens }: { tokens: Token[] }) {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
-            </SettingsLayout>
+            </ProfileLayout>
         </AppLayout>
     );
 }

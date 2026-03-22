@@ -98,7 +98,7 @@ it('tracks onboarding step via post endpoint', function () {
             'step' => 'workspace',
             'action' => 'viewed',
         ])
-        ->assertOk();
+        ->assertRedirect();
 
     expect(OnboardingStepLog::count())->toBe(1);
     expect(OnboardingStepLog::first())

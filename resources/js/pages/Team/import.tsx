@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import WorkspaceLayout from '@/layouts/settings/workspace-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
 import {
@@ -105,7 +105,7 @@ export default function TeamImport({ workspace, canInvite, memberLimitMessage, p
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="CSV Import" />
-            <SettingsLayout>
+            <WorkspaceLayout>
                 <div className="space-y-6">
                     {/* Header */}
                     <div>
@@ -258,7 +258,7 @@ export default function TeamImport({ workspace, canInvite, memberLimitMessage, p
                         </>
                     )}
                 </div>
-            </SettingsLayout>
+            </WorkspaceLayout>
         </AppLayout>
     );
 }

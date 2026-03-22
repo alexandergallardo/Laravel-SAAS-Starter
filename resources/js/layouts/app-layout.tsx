@@ -1,4 +1,5 @@
 import AppLayoutTemplate from '@/layouts/app/app-sidebar-layout';
+import { FeatureProvider } from '@/contexts/feature-context';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { usePage, router } from '@inertiajs/react';
 import { type ReactNode } from 'react';
@@ -40,9 +41,11 @@ export default ({ children, breadcrumbs, ...props }: AppLayoutProps) => {
                     </button>
                 </div>
             )}
-            <AppLayoutTemplate breadcrumbs={breadcrumbs} {...props}>
-                {children}
-            </AppLayoutTemplate>
+            <FeatureProvider>
+                <AppLayoutTemplate breadcrumbs={breadcrumbs} {...props}>
+                    {children}
+                </AppLayoutTemplate>
+            </FeatureProvider>
             <CookieConsentBanner />
         </>
     );

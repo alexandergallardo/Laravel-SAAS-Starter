@@ -9,6 +9,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
@@ -18,16 +19,30 @@ import {
     type WorkspaceRole,
 } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
-import { AlertTriangle, Download, Palette } from 'lucide-react';
+import { AlertTriangle, CalendarDays, CheckCircle2, Circle, Crown, Download, Key, Palette, Users } from 'lucide-react';
 import { useState } from 'react';
 import AvatarUpload from '@/components/avatar-upload';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import WorkspaceLayout from '@/layouts/settings/workspace-layout';
 import { update as updateLogo, destroy as destroyLogo } from '@/routes/workspaces/logo';
 
+interface OnboardingStep {
+    key: string;
+    label: string;
+    completed: boolean;
+}
+
 interface WorkspaceSettingsProps {
-    workspace: Workspace;
+    workspace: Workspace & { created_at: string };
     userRole: WorkspaceRole;
+    stats: {
+        members_count: number;
+        api_keys_count: number;
+    };
+    onboardingProgress: {
+        score: number;
+        steps: OnboardingStep[];
+    };
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -37,6 +52,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function WorkspaceSettings({
     workspace,
     userRole,
+    stats,
+    onboardingProgress,
 }: WorkspaceSettingsProps) {
     const { t } = useTranslations();
     const { data, setData, errors, processing, isDirty } = useForm({
@@ -45,6 +62,7 @@ export default function WorkspaceSettings({
         logo: null as File | null,
         remove_logo: false,
         accent_color: workspace.accent_color || '',
+        billing_email: workspace.billing_email || '',
     });
 
     // No longer needed as handled by AvatarUpload sub-requests
@@ -76,12 +94,77 @@ export default function WorkspaceSettings({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('workspace.settings.title', 'Workspace Settings')} />
 
-            <SettingsLayout
+            <WorkspaceLayout
                 title={t('workspace.settings.title', 'Workspace Settings')}
                 description={t('workspace.settings.description', 'Manage your workspace settings and configuration.')}
                 fullWidth
             >
                 <div className="space-y-6">
+
+                    {/* Quick Stats */}
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                        <div className="flex items-center gap-3 rounded-lg border bg-card p-3">
+                            <Users className="text-muted-foreground h-4 w-4 shrink-0" />
+                            <div className="min-w-0">
+                                <p className="text-muted-foreground text-xs">{t('workspace.settings.stats_members', 'Members')}</p>
+                                <p className="text-sm font-semibold">{stats.members_count}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 rounded-lg border bg-card p-3">
+                            <Crown className="text-muted-foreground h-4 w-4 shrink-0" />
+                            <div className="min-w-0">
+                                <p className="text-muted-foreground text-xs">{t('workspace.settings.stats_plan', 'Plan')}</p>
+                                <p className="truncate text-sm font-semibold">{workspace.plan}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 rounded-lg border bg-card p-3">
+                            <CalendarDays className="text-muted-foreground h-4 w-4 shrink-0" />
+                            <div className="min-w-0">
+                                <p className="text-muted-foreground text-xs">{t('workspace.settings.stats_created', 'Created')}</p>
+                                <p className="text-sm font-semibold">{new Date(workspace.created_at).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 rounded-lg border bg-card p-3">
+                            <Key className="text-muted-foreground h-4 w-4 shrink-0" />
+                            <div className="min-w-0">
+                                <p className="text-muted-foreground text-xs">{t('workspace.settings.stats_api_keys', 'API Keys')}</p>
+                                <p className="text-sm font-semibold">{stats.api_keys_count}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Workspace Onboarding Progress */}
+                    {onboardingProgress.score < 100 && (
+                        <Card>
+                            <CardHeader className="pb-3">
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-sm font-medium">
+                                        Workspace Setup Progress
+                                    </CardTitle>
+                                    <span className="text-sm font-semibold text-primary">
+                                        {onboardingProgress.score}%
+                                    </span>
+                                </div>
+                                <Progress value={onboardingProgress.score} className="h-2" />
+                            </CardHeader>
+                            <CardContent className="pt-0">
+                                <div className="grid gap-1.5 sm:grid-cols-2">
+                                    {onboardingProgress.steps.map((step) => (
+                                        <div key={step.key} className="flex items-center gap-2 text-sm">
+                                            {step.completed ? (
+                                                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                                            ) : (
+                                                <Circle className="h-4 w-4 shrink-0 text-muted-foreground/40" />
+                                            )}
+                                            <span className={step.completed ? 'line-through text-muted-foreground' : ''}>
+                                                {step.label}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
 
                     {/* General Settings */}
                     <Card>
@@ -308,6 +391,52 @@ export default function WorkspaceSettings({
                         </CardContent>
                     </Card>
 
+                    {/* Billing Email */}
+                    {isAdmin && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>{t('workspace.settings.billing_email', 'Billing Email')}</CardTitle>
+                                <CardDescription>
+                                    {t('workspace.settings.billing_email_desc', 'Override the email address for billing receipts and invoices. Leave blank to use the workspace owner\'s email.')}
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="billing_email">
+                                            {t('workspace.settings.billing_email_label', 'Billing Email Address')}
+                                        </Label>
+                                        <Input
+                                            id="billing_email"
+                                            type="email"
+                                            value={data.billing_email}
+                                            onChange={(e) => setData('billing_email', e.target.value)}
+                                            placeholder={t('workspace.settings.billing_email_placeholder', 'billing@yourcompany.com')}
+                                            disabled={!isAdmin}
+                                        />
+                                        <InputError message={errors.billing_email} />
+                                        <p className="text-xs text-muted-foreground">
+                                            {t('workspace.settings.billing_email_help', 'This email will receive invoices and payment notifications instead of the owner\'s email.')}
+                                        </p>
+                                    </div>
+                                    <Button
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            router.put('/workspaces/settings', data, {
+                                                forceFormData: true,
+                                                preserveScroll: true,
+                                            });
+                                        }}
+                                        disabled={processing || !isDirty}
+                                    >
+                                        {processing && <Spinner className="mr-2" />}
+                                        {t('workspace.settings.save_billing', 'Save Billing Settings')}
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
                     {/* Data Management */}
                     <Card>
                         <CardHeader>
@@ -388,7 +517,7 @@ export default function WorkspaceSettings({
                         </Card>
                     )}
                 </div>
-            </SettingsLayout>
+            </WorkspaceLayout>
         </AppLayout>
     );
 }

@@ -25,6 +25,11 @@ class RequireTwoFactor
             return $next($request);
         }
 
+        // Super admins are exempt from 2FA requirements
+        if ($user->is_superadmin) {
+            return $next($request);
+        }
+
         // Workspace owners are always exempt — they must be able to reach
         // settings to disable the policy even if they haven't set up 2FA.
         if ($workspace->owner_id === $user->id) {

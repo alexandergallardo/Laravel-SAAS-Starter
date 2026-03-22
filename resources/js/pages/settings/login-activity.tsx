@@ -7,7 +7,7 @@ import { useTranslations } from '@/hooks/use-translations';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import ProfileLayout from '@/layouts/settings/profile-layout';
 import { CheckCircle, Clock, Globe, Monitor, XCircle } from 'lucide-react';
 
 interface LoginActivityItem {
@@ -55,7 +55,7 @@ export default function LoginActivity({ activities }: { activities: LoginActivit
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('login_history.title', 'Login History')} />
 
-            <SettingsLayout
+            <ProfileLayout
                 title={t('login_history.title', 'Login History')}
                 description={t('login_history.description', 'Review recent sign-in activity on your account.')}
                 fullWidth
@@ -124,7 +124,7 @@ export default function LoginActivity({ activities }: { activities: LoginActivit
                         )}
                     </CardContent>
                 </Card>
-            </SettingsLayout>
+            </ProfileLayout>
         </AppLayout>
     );
 }

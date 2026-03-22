@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/toast';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import ProfileLayout from '@/layouts/settings/profile-layout';
 import { Head } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
@@ -32,14 +32,13 @@ export default function PrivacySettings() {
     };
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Privacy & Cookies', href: '/settings/privacy' }]}>
-            <Head title="Privacy & Cookies" />
-            <SettingsLayout>
+        <AppLayout breadcrumbs={[{ title: 'Cookies', href: '/settings/privacy' }]}>
+            <Head title="Cookies" />
+            <ProfileLayout
+                title="Cookies"
+                description="Manage your cookie preferences and consent settings."
+            >
                 <div className="space-y-6">
-                    <HeadingSmall
-                        title="Cookie Preferences"
-                        description="Manage how your data is tracked across our application."
-                    />
 
                     <div className="space-y-6 max-w-2xl mt-4">
                         <div className="flex items-start justify-between space-x-2 rounded-lg border p-4 shadow-sm">
@@ -81,7 +80,7 @@ export default function PrivacySettings() {
                         </div>
                     </div>
                 </div>
-            </SettingsLayout>
+            </ProfileLayout>
         </AppLayout>
     );
 }

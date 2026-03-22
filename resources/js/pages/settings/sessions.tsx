@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import ProfileLayout from '@/layouts/settings/profile-layout';
 import {
     Dialog,
     DialogContent,
@@ -85,7 +85,7 @@ export default function Sessions({ sessions }: { sessions: Session[] }) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('sessions.title', 'Sessions')} />
 
-            <SettingsLayout
+            <ProfileLayout
                 title={t('sessions.title', 'Sessions')}
                 description={t('sessions.description', 'Manage your active browser sessions and revoke access.')}
                 fullWidth
@@ -240,7 +240,7 @@ export default function Sessions({ sessions }: { sessions: Session[] }) {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
-            </SettingsLayout>
+            </ProfileLayout>
         </AppLayout>
     );
 }

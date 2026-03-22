@@ -1,4 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
+import WorkspaceLayout from '@/layouts/settings/workspace-layout';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,7 @@ import {
     Shield,
     Trash2,
 } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 import { useState } from 'react';
 
 interface ApiKey {
@@ -106,7 +108,11 @@ export default function WorkspaceApiKeys({ keys, availableScopes, isAdmin }: Pro
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Workspace API Keys" />
 
-            <div className="flex h-full flex-1 flex-col gap-6 p-4 lg:p-6">
+            <WorkspaceLayout
+                title="Workspace API Keys"
+                description="Manage API keys scoped to this workspace. These are separate from personal access tokens."
+                fullWidth
+            >
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
@@ -260,7 +266,7 @@ export default function WorkspaceApiKeys({ keys, availableScopes, isAdmin }: Pro
                                                 <span>Created by {key.created_by}</span>
                                                 <span>
                                                     {key.last_used_at
-                                                        ? `Last used ${new Date(key.last_used_at).toLocaleDateString()}`
+                                                        ? `Last used ${formatDistanceToNow(new Date(key.last_used_at), { addSuffix: true })}`
                                                         : 'Never used'}
                                                 </span>
                                                 {key.expires_at && (
@@ -296,7 +302,7 @@ export default function WorkspaceApiKeys({ keys, availableScopes, isAdmin }: Pro
                         )}
                     </CardContent>
                 </Card>
-            </div>
+            </WorkspaceLayout>
 
             {/* Delete Confirmation */}
             <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>

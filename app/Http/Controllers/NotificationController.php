@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -48,7 +49,7 @@ class NotificationController extends Controller
     /**
      * Mark a specific notification as read.
      */
-    public function markAsRead(Request $request, string $id): JsonResponse
+    public function markAsRead(Request $request, string $id): JsonResponse|RedirectResponse
     {
         $notification = $request->user()
             ->notifications()
@@ -58,26 +59,38 @@ class NotificationController extends Controller
         if ($notification) {
             $notification->markAsRead();
 
-            return response()->json(['success' => true]);
+            if ($request->wantsJson()) {
+                return response()->json(['success' => true]);
+            }
+
+            return back();
         }
 
-        return response()->json(['success' => false, 'error' => 'Notification not found.'], 404);
+        if ($request->wantsJson()) {
+            return response()->json(['success' => false, 'error' => 'Notification not found.'], 404);
+        }
+
+        return back()->with('error', 'Notification not found.');
     }
 
     /**
      * Mark all unread notifications as read.
      */
-    public function markAllAsRead(Request $request): JsonResponse
+    public function markAllAsRead(Request $request): JsonResponse|RedirectResponse
     {
         $request->user()->unreadNotifications->markAsRead();
 
-        return response()->json(['success' => true]);
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return back();
     }
 
     /**
      * Delete a single notification.
      */
-    public function destroy(Request $request, string $id): JsonResponse
+    public function destroy(Request $request, string $id): JsonResponse|RedirectResponse
     {
         $deleted = $request->user()
             ->notifications()
@@ -85,22 +98,34 @@ class NotificationController extends Controller
             ->delete();
 
         if ($deleted) {
-            return response()->json(['success' => true]);
+            if ($request->wantsJson()) {
+                return response()->json(['success' => true]);
+            }
+
+            return back();
         }
 
-        return response()->json(['success' => false, 'error' => 'Notification not found.'], 404);
+        if ($request->wantsJson()) {
+            return response()->json(['success' => false, 'error' => 'Notification not found.'], 404);
+        }
+
+        return back()->with('error', 'Notification not found.');
     }
 
     /**
      * Delete all read notifications for the authenticated user.
      */
-    public function clearRead(Request $request): JsonResponse
+    public function clearRead(Request $request): JsonResponse|RedirectResponse
     {
         $request->user()
             ->notifications()
             ->whereNotNull('read_at')
             ->delete();
 
-        return response()->json(['success' => true]);
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return back();
     }
 }

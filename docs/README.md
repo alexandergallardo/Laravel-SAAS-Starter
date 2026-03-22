@@ -69,6 +69,9 @@ This repository contains comprehensive documentation for the architecture, featu
 - [Workspace Email Domain Restriction](./features/workspace-domain-restriction.md)
 - [Weekly Workspace Activity Digest](./features/weekly-workspace-digest.md)
 - [Admin Cohort Retention Analysis](./features/admin-cohort-analysis.md)
+- [User Last Seen Timestamp](./features/user-last-seen.md)
+- [User Login Methods Summary](./features/security-summary.md)
+- [Session Activity Summary](./features/session-summary.md)
 
 ## Development Directives
 

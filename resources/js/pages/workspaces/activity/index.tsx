@@ -1,5 +1,6 @@
 import { HelpTooltip } from '@/components/help-tooltip';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Select,
@@ -10,13 +11,14 @@ import {
 } from '@/components/ui/select';
 import { useTranslations } from '@/hooks/use-translations';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import WorkspaceLayout from '@/layouts/settings/workspace-layout';
 import { type Workspace } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import {
     Activity as ActivityIcon,
     CreditCard,
+    Download,
     Edit,
     LogIn,
     Plus,
@@ -62,7 +64,7 @@ function getEventConfig(event: string) {
     return eventConfig[event] || { icon: ActivityIcon, color: 'text-muted-foreground', label: event };
 }
 
-export default function WorkspaceActivity({ activities, eventTypes, currentFilter }: ActivityFeedProps) {
+export default function WorkspaceActivity({ workspace, activities, eventTypes, currentFilter }: ActivityFeedProps) {
     const { t } = useTranslations();
 
     const handleFilterChange = (value: string) => {
@@ -82,7 +84,7 @@ export default function WorkspaceActivity({ activities, eventTypes, currentFilte
         >
             <Head title={t('workspace.activity.page_title', 'Activity Feed')} />
 
-            <SettingsLayout
+            <WorkspaceLayout
                 title={t('workspace.activity.heading', 'Activity Feed')}
                 description={t('workspace.activity.description', 'Live feed of workspace events — member changes, settings updates, and more.')}
                 fullWidth
@@ -101,21 +103,33 @@ export default function WorkspaceActivity({ activities, eventTypes, currentFilte
                                         {t('workspace.activity.showing', 'Showing the latest workspace events.')}
                                     </CardDescription>
                                 </div>
-                                {eventTypes.length > 0 && (
-                                    <Select value={currentFilter} onValueChange={handleFilterChange}>
-                                        <SelectTrigger className="w-36">
-                                            <SelectValue placeholder="Filter" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">All Events</SelectItem>
-                                            {eventTypes.map((type) => (
-                                                <SelectItem key={type} value={type}>
-                                                    {getEventConfig(type).label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                )}
+                                <div className="flex items-center gap-2">
+                                    {eventTypes.length > 0 && (
+                                        <Select value={currentFilter} onValueChange={handleFilterChange}>
+                                            <SelectTrigger className="w-36">
+                                                <SelectValue placeholder="Filter" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All Events</SelectItem>
+                                                {eventTypes.map((type) => (
+                                                    <SelectItem key={type} value={type}>
+                                                        {getEventConfig(type).label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        asChild
+                                    >
+                                        <a href={`/workspaces/${workspace.id}/activity/export`}>
+                                            <Download className="mr-1.5 h-4 w-4" />
+                                            Export CSV
+                                        </a>
+                                    </Button>
+                                </div>
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -197,7 +211,7 @@ export default function WorkspaceActivity({ activities, eventTypes, currentFilte
                         </CardContent>
                     </Card>
                 </div>
-            </SettingsLayout>
+            </WorkspaceLayout>
         </AppLayout>
     );
 }

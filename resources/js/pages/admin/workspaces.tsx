@@ -20,12 +20,14 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import {
     AlertTriangle,
     Building2,
     CheckCircle,
     MoreHorizontal,
     Search,
+    Settings,
     Users,
 } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
@@ -42,6 +44,7 @@ interface PaginatedWorkspace {
     slug: string;
     personal_workspace: boolean;
     plan: string;
+    plan_override: string | null;
     users_count: number;
     owner: Owner | null;
     created_at: string;
@@ -82,6 +85,8 @@ export default function AdminWorkspaces({ workspaces, filters, planOptions }: Ad
     const [plan, setPlan] = useState(filters.plan || '');
     const [suspensionDialogWorkspace, setSuspensionDialogWorkspace] = useState<PaginatedWorkspace | null>(null);
     const [suspensionReason, setSuspensionReason] = useState('');
+    const [overrideDialogWorkspace, setOverrideDialogWorkspace] = useState<PaginatedWorkspace | null>(null);
+    const [planOverrideValue, setPlanOverrideValue] = useState('');
     const [processing, setProcessing] = useState(false);
 
     const handleSearch = (e: FormEvent) => {
@@ -115,6 +120,28 @@ export default function AdminWorkspaces({ workspaces, filters, planOptions }: Ad
 
     const handleUnsuspend = (workspace: PaginatedWorkspace) => {
         router.post(`/admin/workspaces/${workspace.id}/unsuspend`);
+    };
+
+    const openOverrideDialog = (workspace: PaginatedWorkspace) => {
+        setOverrideDialogWorkspace(workspace);
+        setPlanOverrideValue(workspace.plan_override ?? '');
+    };
+
+    const handleOverridePlan = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!overrideDialogWorkspace) return;
+        setProcessing(true);
+        router.post(
+            `/admin/workspaces/${overrideDialogWorkspace.id}/override-plan`,
+            { plan_override: planOverrideValue },
+            {
+                onFinish: () => {
+                    setProcessing(false);
+                    setOverrideDialogWorkspace(null);
+                    setPlanOverrideValue('');
+                },
+            },
+        );
     };
 
 
@@ -205,7 +232,12 @@ export default function AdminWorkspaces({ workspaces, filters, planOptions }: Ad
                                             )}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <Badge variant={PLAN_BADGE_VARIANT[ws.plan] || 'outline'}>{ws.plan}</Badge>
+                                            <div className="flex flex-col gap-1">
+                                                <Badge variant={PLAN_BADGE_VARIANT[ws.plan] || 'outline'}>{ws.plan}</Badge>
+                                                {ws.plan_override && (
+                                                    <span className="text-xs text-amber-600 dark:text-amber-400">Override</span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-1.5 text-muted-foreground">
@@ -237,6 +269,11 @@ export default function AdminWorkspaces({ workspaces, filters, planOptions }: Ad
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem onClick={() => openOverrideDialog(ws)} disabled={!!ws.deleted_at}>
+                                                        <Settings className="mr-2 h-4 w-4" />
+                                                        Override Plan
+                                                    </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
                                                     {ws.suspended_at ? (
                                                         <DropdownMenuItem onClick={() => handleUnsuspend(ws)}>
@@ -279,6 +316,45 @@ export default function AdminWorkspaces({ workspaces, filters, planOptions }: Ad
                     </div>
                 )}
             </div>
+
+            <Dialog open={!!overrideDialogWorkspace} onOpenChange={() => setOverrideDialogWorkspace(null)}>
+                <DialogContent>
+                    <form onSubmit={handleOverridePlan}>
+                        <DialogHeader>
+                            <DialogTitle>Override Plan</DialogTitle>
+                            <DialogDescription>
+                                Set a plan override for <strong>{overrideDialogWorkspace?.name}</strong>. This takes precedence over the Stripe subscription. Leave blank to clear the override.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4">
+                            <Label htmlFor="plan_override" className="mb-2 block text-sm font-medium">
+                                Plan override (e.g. Pro, Business)
+                            </Label>
+                            <Input
+                                id="plan_override"
+                                value={planOverrideValue}
+                                onChange={(e) => setPlanOverrideValue(e.target.value)}
+                                placeholder="Leave blank to clear override"
+                                maxLength={50}
+                                list="plan-options"
+                            />
+                            <datalist id="plan-options">
+                                {planOptions.map((p) => (
+                                    <option key={p} value={p} />
+                                ))}
+                            </datalist>
+                        </div>
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setOverrideDialogWorkspace(null)} disabled={processing}>
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={processing}>
+                                {processing ? 'Saving...' : 'Save Override'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
 
             <Dialog open={!!suspensionDialogWorkspace} onOpenChange={() => setSuspensionDialogWorkspace(null)}>
                 <DialogContent>

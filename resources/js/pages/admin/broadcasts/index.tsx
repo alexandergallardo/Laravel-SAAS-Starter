@@ -41,6 +41,7 @@ interface BroadcastMessage {
     id: number;
     subject: string;
     body: string;
+    action_url: string | null;
     send_via_email: boolean;
     send_via_in_app: boolean;
     target_segment: string;
@@ -82,6 +83,7 @@ export default function BroadcastsIndex({ broadcasts }: Props) {
     const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
         subject: '',
         body: '',
+        action_url: '',
         send_via_email: false,
         send_via_in_app: true,
         target_segment: 'all_users',
@@ -185,6 +187,19 @@ export default function BroadcastsIndex({ broadcasts }: Props) {
                                         className="h-32"
                                     />
                                     {errors.body && <div className="text-sm text-red-500">{errors.body}</div>}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="action_url">Action URL <span className="text-muted-foreground font-normal text-xs">(optional)</span></Label>
+                                    <Input
+                                        id="action_url"
+                                        type="url"
+                                        value={data.action_url}
+                                        onChange={(e) => setData('action_url', e.target.value)}
+                                        placeholder="https://yourapp.com/announcement"
+                                    />
+                                    {errors.action_url && <div className="text-sm text-red-500">{errors.action_url}</div>}
+                                    <p className="text-xs text-muted-foreground">If provided, a "View Details" link will appear in the in-app notification.</p>
                                 </div>
 
                                 <div className="space-y-2">

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ChangelogEntry;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class ChangelogWidgetController extends Controller
@@ -43,10 +44,10 @@ class ChangelogWidgetController extends Controller
     /**
      * Mark all changelog entries as read for the authenticated user.
      */
-    public function markRead(Request $request): JsonResponse
+    public function markRead(Request $request): RedirectResponse
     {
         $request->user()->update(['changelog_read_at' => now()]);
 
-        return response()->json(['success' => true]);
+        return back();
     }
 }

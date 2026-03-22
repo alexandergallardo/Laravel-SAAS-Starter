@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Transition } from '@headlessui/react';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import ProfileLayout from '@/layouts/settings/profile-layout';
 
 export default function Notifications({
     notification_preferences,
@@ -48,7 +48,7 @@ export default function Notifications({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('settings.notifications.title', 'Notifications')} />
 
-            <SettingsLayout
+            <ProfileLayout
                 title={t('settings.notifications.title', 'Notifications')}
                 description={t('settings.notifications.description', 'Manage how you receive alerts and communications.')}
             >
@@ -200,7 +200,7 @@ export default function Notifications({
                         </Transition>
                     </div>
                 </form>
-            </SettingsLayout>
+            </ProfileLayout>
         </AppLayout>
     );
 }

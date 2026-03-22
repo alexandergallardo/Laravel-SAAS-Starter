@@ -11,7 +11,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import WorkspaceLayout from '@/layouts/settings/workspace-layout';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { AlertTriangle, AtSign, ShieldCheck, ShieldOff } from 'lucide-react';
 
@@ -39,7 +39,7 @@ export default function WorkspaceSecurity({ require_two_factor, allowed_ips, all
         <AppLayout breadcrumbs={[{ title: 'Security', href: '/settings/workspace-security' }]}>
             <Head title="Workspace Security" />
 
-            <SettingsLayout title="Workspace Security" description="Manage security policies for your workspace.">
+            <WorkspaceLayout title="Workspace Security" description="Manage security policies for your workspace.">
                 <div className="space-y-6">
                     {flash?.success && (
                         <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-400">
@@ -176,7 +176,7 @@ export default function WorkspaceSecurity({ require_two_factor, allowed_ips, all
                         </CardContent>
                     </Card>
                 </div>
-            </SettingsLayout>
+            </WorkspaceLayout>
         </AppLayout>
     );
 }

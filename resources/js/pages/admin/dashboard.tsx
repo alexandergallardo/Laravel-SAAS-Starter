@@ -45,8 +45,15 @@ interface PlanDistItem {
     count: number;
 }
 
+interface Sparklines {
+    new_users: number[];
+    new_workspaces: number[];
+    new_subscriptions: number[];
+}
+
 interface AdminDashboardProps {
     metrics: Metrics;
+    sparklines: Sparklines;
     dailySignups: DailyStat[];
     dailyWorkspaces: DailyStat[];
     planDistribution: PlanDistItem[];
@@ -56,6 +63,34 @@ interface AdminDashboardProps {
         email: string;
         created_at: string;
     }[];
+}
+
+function Sparkline({ data, color = 'hsl(var(--primary))' }: { data: number[]; color?: string }) {
+    if (data.length < 2) return null;
+
+    const width = 80;
+    const height = 24;
+    const max = Math.max(...data, 1);
+    const points = data
+        .map((v, i) => {
+            const x = (i / (data.length - 1)) * width;
+            const y = height - (v / max) * height;
+            return `${x},${y}`;
+        })
+        .join(' ');
+
+    return (
+        <svg width={width} height={height} className="opacity-70">
+            <polyline
+                points={points}
+                fill="none"
+                stroke={color}
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </svg>
+    );
 }
 
 function GrowthBadge({ value, invertColors = false }: { value: number, invertColors?: boolean }) {
@@ -79,7 +114,7 @@ function GrowthBadge({ value, invertColors = false }: { value: number, invertCol
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--primary) / 0.7)', 'hsl(var(--primary) / 0.4)', 'hsl(var(--muted))'];
 
-export default function AdminDashboard({ metrics, dailySignups, dailyWorkspaces, planDistribution, recent_users }: AdminDashboardProps) {
+export default function AdminDashboard({ metrics, sparklines, dailySignups, dailyWorkspaces, planDistribution, recent_users }: AdminDashboardProps) {
     // Combine daily stats for the multi-line chart
     const combinedDailyStats = dailySignups.map((signupDay, index) => {
         const workspaceDay = dailyWorkspaces[index] || { count: 0 };
@@ -116,9 +151,10 @@ export default function AdminDashboard({ metrics, dailySignups, dailyWorkspaces,
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{formatCurrency(metrics.mrr)}</div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                From active subscriptions
-                            </p>
+                            <div className="mt-2 flex items-center justify-between">
+                                <p className="text-xs text-muted-foreground">From active subscriptions</p>
+                                <Sparkline data={sparklines.new_subscriptions} />
+                            </div>
                         </CardContent>
                     </Card>
 
@@ -129,22 +165,26 @@ export default function AdminDashboard({ metrics, dailySignups, dailyWorkspaces,
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{metrics.active_subscriptions}</div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Paying and trialing workspaces
-                            </p>
+                            <div className="mt-2 flex items-center justify-between">
+                                <p className="text-xs text-muted-foreground">Paying and trialing workspaces</p>
+                                <Sparkline data={sparklines.new_subscriptions} />
+                            </div>
                         </CardContent>
                     </Card>
 
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Churn Rate (30d)</CardTitle>
+                            <CardTitle className="text-sm font-medium">Active Workspaces (7d)</CardTitle>
                             <Activity className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{metrics.churn_rate}%</div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Subscriber retention health
-                            </p>
+                            <div className="text-2xl font-bold">{metrics.total_workspaces}</div>
+                            <div className="mt-2 flex items-center justify-between">
+                                <p className="text-xs text-muted-foreground">
+                                    <GrowthBadge value={metrics.workspace_growth_percent} /> vs prior 30d
+                                </p>
+                                <Sparkline data={sparklines.new_workspaces} />
+                            </div>
                         </CardContent>
                     </Card>
 
@@ -155,9 +195,12 @@ export default function AdminDashboard({ metrics, dailySignups, dailyWorkspaces,
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{metrics.total_users}</div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                <GrowthBadge value={metrics.user_growth_percent} /> from previous 30d
-                            </p>
+                            <div className="mt-2 flex items-center justify-between">
+                                <p className="text-xs text-muted-foreground">
+                                    <GrowthBadge value={metrics.user_growth_percent} /> from previous 30d
+                                </p>
+                                <Sparkline data={sparklines.new_users} />
+                            </div>
                         </CardContent>
                     </Card>
                 </div>

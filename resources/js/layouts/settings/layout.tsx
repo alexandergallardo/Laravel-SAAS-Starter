@@ -3,13 +3,31 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useTranslations } from '@/hooks/use-translations';
 import { cn, isSameUrl, resolveUrl } from '@/lib/utils';
-import { edit as editAppearance } from '@/routes/appearance';
 import { edit } from '@/routes/profile';
-import { show } from '@/routes/two-factor';
-import { edit as editPassword } from '@/routes/user-password';
-import { type NavItem } from '@/types';
+import { type NavItem, type WorkspaceRole } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { Activity, BarChart3, Bell, Cookie, FileUp, Fingerprint, History, Link2, Lock, Monitor, Paintbrush, ShieldAlert, ShieldCheck, Ticket, TrendingUp, User } from 'lucide-react';
+import {
+    Activity,
+    AlertTriangle,
+    BarChart3,
+    Bell,
+    Building2,
+    Cookie,
+    CreditCard,
+    FileUp,
+    Fingerprint,
+    History,
+    Link2,
+    Lock,
+    Monitor,
+    Shield,
+    ShieldAlert,
+    Ticket,
+    TrendingUp,
+    User,
+    Users,
+    Webhook,
+} from 'lucide-react';
 import { type PropsWithChildren, useMemo } from 'react';
 import { type SharedData, type Workspace } from '@/types';
 
@@ -18,128 +36,186 @@ interface NavSection {
     items: NavItem[];
 }
 
-const getNavSections = (t: (key: string, fallback: string) => string, workspace?: Workspace | null): NavSection[] => [
-    {
-        title: t('navigation.general', 'General'),
-        items: [
-            {
-                title: t('navigation.general', 'General'),
-                href: '/workspaces/settings',
-                icon: null,
-            },
-            {
-                title: t('navigation.team', 'Team'),
-                href: '/team',
-                icon: null,
-            },
-            {
-                title: t('navigation.csv_import', 'CSV Import'),
-                href: '/team/import',
-                icon: FileUp,
-            },
-            {
-                title: t('navigation.billing', 'Billing'),
-                href: '/billing',
-                icon: null,
-            },
-            {
-                title: t('navigation.member_activity', 'Member Activity'),
-                href: '/team/activity-report',
-                icon: BarChart3,
-            },
-            {
-                title: t('navigation.analytics', 'Analytics'),
-                href: '/workspaces/analytics',
-                icon: TrendingUp,
-            },
-            {
-                title: t('navigation.api_usage', 'API Usage'),
-                href: '/workspaces/api-usage',
-                icon: Activity,
-            },
-            {
-                title: t('navigation.security', 'Security'),
-                href: '/settings/workspace-security',
-                icon: null,
-            },
-            {
-                title: t('navigation.danger_zone', 'Danger Zone'),
-                href: '/settings/workspace-danger-zone',
-                icon: ShieldAlert,
-            },
-            {
-                title: t('navigation.activity', 'Activity'),
-                href: workspace ? `/workspaces/${workspace.id}/activity` : '#',
-                icon: null,
-            },
-            {
-                title: t('navigation.webhooks', 'Webhooks'),
-                href: workspace ? `/workspaces/${workspace.id}/webhooks` : '#',
-                icon: null,
-            },
-        ],
-    },
-    {
-        title: t('navigation.account', 'Account'),
-        items: [
-            {
-                title: t('navigation.profile', 'Profile'),
-                href: edit(),
-                icon: User,
-            },
-            {
-                title: t('navigation.password', 'Password'),
-                href: editPassword(),
-                icon: Lock,
-            },
-            {
-                title: t('navigation.two_factor_auth', 'Two-Factor Auth'),
-                href: show(),
-                icon: ShieldCheck,
-            },
-            {
-                title: t('navigation.appearance', 'Appearance'),
-                href: editAppearance(),
-                icon: Paintbrush,
-            },
-            {
-                title: t('navigation.privacy', 'Privacy & Cookies'),
-                href: '/settings/privacy',
-                icon: Cookie,
-            },
-            {
-                title: t('navigation.notifications', 'Notifications'),
-                href: '/settings/notifications',
-                icon: Bell,
-            },
-            {
-                title: t('navigation.api_tokens', 'API Tokens'),
-                href: '/settings/api-tokens',
-                icon: Fingerprint,
-            },
-            {
-                title: t('navigation.sessions', 'Sessions'),
-                href: '/settings/sessions',
-                icon: Monitor,
-            },
-            {
-                title: t('navigation.login_history', 'Login History'),
-                href: '/settings/login-history',
-                icon: History,
-            },
-            {
-                title: t('navigation.connected_accounts', 'Connected Accounts'),
-                href: '/settings/connected-accounts',
-                icon: Link2,
-            },
-            {
-                title: t('navigation.support_tickets', 'Support Tickets'),
-                href: '/settings/tickets',
-                icon: Ticket,
-            },
-        ],
-    },
-];
+interface NavItemWithRole extends NavItem {
+    allowedRoles?: WorkspaceRole[];
+}
+
+const getNavSections = (
+    t: (key: string, fallback: string) => string, 
+    workspace?: Workspace | null,
+    userRole?: WorkspaceRole | null
+): NavSection[] => {
+    const isOwner = userRole === 'owner';
+    const isAdmin = userRole === 'owner' || userRole === 'admin';
+
+    const workspaceItems: NavItemWithRole[] = [
+        {
+            title: t('navigation.general', 'General'),
+            href: '/workspaces/settings',
+            icon: Building2,
+        },
+        {
+            title: t('navigation.billing', 'Billing'),
+            href: '/billing',
+            icon: CreditCard,
+            allowedRoles: ['owner', 'admin'],
+        },
+    ];
+
+    const teamItems: NavItemWithRole[] = [
+        {
+            title: t('navigation.members', 'Members'),
+            href: '/team',
+            icon: Users,
+        },
+        {
+            title: t('navigation.csv_import', 'CSV Import'),
+            href: '/team/import',
+            icon: FileUp,
+            allowedRoles: ['owner', 'admin'],
+        },
+        {
+            title: t('navigation.member_activity', 'Activity Report'),
+            href: '/team/activity-report',
+            icon: BarChart3,
+            allowedRoles: ['owner', 'admin'],
+        },
+    ];
+
+    const analyticsItems: NavItemWithRole[] = [
+        {
+            title: t('navigation.overview', 'Overview'),
+            href: '/workspaces/analytics',
+            icon: TrendingUp,
+        },
+        {
+            title: t('navigation.api_usage', 'API Usage'),
+            href: '/workspaces/api-usage',
+            icon: Activity,
+            allowedRoles: ['owner', 'admin'],
+        },
+        {
+            title: t('navigation.activity_log', 'Activity Log'),
+            href: workspace ? `/workspaces/${workspace.id}/activity` : '#',
+            icon: History,
+            allowedRoles: ['owner', 'admin'],
+        },
+    ];
+
+    const securityItems: NavItemWithRole[] = [
+        {
+            title: t('navigation.security_settings', 'Security Settings'),
+            href: '/settings/workspace-security',
+            icon: Shield,
+            allowedRoles: ['owner', 'admin'],
+        },
+        {
+            title: t('navigation.webhooks', 'Webhooks'),
+            href: workspace ? `/workspaces/${workspace.id}/webhooks` : '#',
+            icon: Webhook,
+            allowedRoles: ['owner', 'admin'],
+        },
+        {
+            title: t('navigation.danger_zone', 'Danger Zone'),
+            href: '/settings/workspace-danger-zone',
+            icon: AlertTriangle,
+            allowedRoles: ['owner'],
+        },
+    ];
+
+    const accountItems: NavItemWithRole[] = [
+        {
+            title: t('navigation.general', 'General'),
+            href: edit(),
+            icon: User,
+        },
+        {
+            title: t('navigation.connected_accounts', 'Connected Accounts'),
+            href: '/settings/connected-accounts',
+            icon: Link2,
+        },
+        {
+            title: t('navigation.authentication', 'Authentication'),
+            href: '/settings/security/authentication',
+            icon: Lock,
+        },
+        {
+            title: t('navigation.sessions', 'Sessions'),
+            href: '/settings/sessions',
+            icon: Monitor,
+        },
+        {
+            title: t('navigation.login_history', 'Login History'),
+            href: '/settings/login-history',
+            icon: History,
+        },
+        {
+            title: t('navigation.cookies', 'Cookies'),
+            href: '/settings/privacy',
+            icon: Cookie,
+        },
+        {
+            title: t('navigation.notifications', 'Notifications'),
+            href: '/settings/notifications',
+            icon: Bell,
+        },
+        {
+            title: t('navigation.api_tokens', 'API Tokens'),
+            href: '/settings/api-tokens',
+            icon: Fingerprint,
+        },
+        {
+            title: t('navigation.support_tickets', 'Support Tickets'),
+            href: '/settings/tickets',
+            icon: Ticket,
+        },
+    ];
+
+    // Filter items based on role
+    const filterItems = (items: NavItemWithRole[]): NavItem[] => {
+        return items.filter(item => {
+            if (!item.allowedRoles) return true;
+            if (!userRole) return false;
+            return item.allowedRoles.includes(userRole);
+        });
+    };
+
+    const sections: NavSection[] = [
+        {
+            title: t('navigation.workspace', 'Workspace'),
+            items: filterItems(workspaceItems),
+        },
+        {
+            title: t('navigation.team', 'Team'),
+            items: filterItems(teamItems),
+        },
+    ];
+
+    // Only show analytics if there are visible items
+    const visibleAnalytics = filterItems(analyticsItems);
+    if (visibleAnalytics.length > 0) {
+        sections.push({
+            title: t('navigation.analytics', 'Analytics'),
+            items: visibleAnalytics,
+        });
+    }
+
+    // Only show security if there are visible items
+    const visibleSecurity = filterItems(securityItems);
+    if (visibleSecurity.length > 0) {
+        sections.push({
+            title: t('navigation.security', 'Security'),
+            items: visibleSecurity,
+        });
+    }
+
+    sections.push({
+        title: t('navigation.profile_section', 'Profile'),
+        items: filterItems(accountItems),
+    });
+
+    return sections;
+};
 
 interface SettingsLayoutProps extends PropsWithChildren {
     title?: string;
@@ -155,19 +231,17 @@ export default function SettingsLayout({
 }: SettingsLayoutProps) {
     const { t, i18n } = useTranslations();
     const { currentWorkspace } = usePage<SharedData>().props;
-    const navSections = useMemo(() => getNavSections(t, currentWorkspace), [t, currentWorkspace]);
+    const userRole = currentWorkspace?.role;
+    const navSections = useMemo(() => getNavSections(t, currentWorkspace, userRole), [t, currentWorkspace, userRole]);
 
     const defaultTitle = title ?? t('settings.title', 'Settings');
     const defaultDescription = description ?? t('settings.description', 'Manage your workspace and account settings');
 
-    // When server-side rendering, we only render the layout on the client...
     if (typeof window === 'undefined') {
         return null;
     }
 
     const currentPath = window.location.pathname;
-
-    // Detect RTL for layout adjustments
     const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
     const isRTL = RTL_LANGUAGES.includes(i18n.language);
 

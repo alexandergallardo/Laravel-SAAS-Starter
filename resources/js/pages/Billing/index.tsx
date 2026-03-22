@@ -13,7 +13,7 @@ import { useTranslations } from '@/hooks/use-translations';
 import http from '@/lib/http';
 import { cn } from '@/lib/utils';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import WorkspaceLayout from '@/layouts/settings/workspace-layout';
 import {
     type BreadcrumbItem,
     type Invoice,
@@ -147,7 +147,7 @@ export default function BillingIndex({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('billing.title', 'Billing')} />
 
-            <SettingsLayout
+            <WorkspaceLayout
                 title={t('billing.title', 'Billing')}
                 description={t('billing.description', 'Manage your subscription and billing information')}
                 fullWidth
@@ -370,7 +370,7 @@ export default function BillingIndex({
                             </CardHeader>
                             <CardContent className="p-6">
                                 <div className="grid gap-8 md:grid-cols-3">
-                                    {Object.entries(usage).map(([key, item]) => (
+                                    {usage && Object.entries(usage).map(([key, item]) => (
                                         <div key={key} className="space-y-3">
                                             <div className="flex justify-between items-end">
                                                 <span className="text-sm font-bold uppercase tracking-wider text-muted-foreground/70">
@@ -415,7 +415,7 @@ export default function BillingIndex({
                             </CardContent>
                         </Card>
                     }>
-                        {invoices.length > 0 && (
+                        {invoices?.length > 0 && (
                             <Card className="glass shadow-sm border-none animate-fade-in-up delay-500">
                                 <CardHeader className="pb-4">
                                     <CardTitle className="text-lg font-bold flex items-center gap-2">
@@ -464,7 +464,7 @@ export default function BillingIndex({
                         )}
                     </Deferred>
                 </div>
-            </SettingsLayout>
+            </WorkspaceLayout>
         </AppLayout>
     );
 }

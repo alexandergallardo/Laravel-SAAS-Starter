@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import WorkspaceLayout from '@/layouts/settings/workspace-layout';
 import { Head, router } from '@inertiajs/react';
 import { useTranslations } from '@/hooks/use-translations';
 import { Workspace } from '@/types';
@@ -74,7 +74,7 @@ export default function WorkspaceWebhookLogs({ workspace, logs }: WebhookLogsPro
         >
             <Head title={t('workspace.webhooks.logs.page_title', 'Webhook Delivery Logs')} />
 
-            <SettingsLayout
+            <WorkspaceLayout
                 title={t('workspace.webhooks.logs.heading', 'Delivery Logs')}
                 description={t('workspace.webhooks.logs.description', 'Review recent outbound webhook attempts and inspect payloads.')}
                 fullWidth
@@ -237,7 +237,7 @@ export default function WorkspaceWebhookLogs({ workspace, logs }: WebhookLogsPro
                     </DialogContent>
                 </Dialog>
 
-            </SettingsLayout>
+            </WorkspaceLayout>
         </AppLayout>
     );
 }

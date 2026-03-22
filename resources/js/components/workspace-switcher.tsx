@@ -30,7 +30,7 @@ export function WorkspaceSwitcher() {
     }
 
     return (
-        <SidebarMenu>
+        <SidebarMenu data-tour="workspace-switcher">
             <SidebarMenuItem>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>

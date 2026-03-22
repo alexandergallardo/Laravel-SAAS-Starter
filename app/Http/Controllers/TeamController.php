@@ -39,7 +39,7 @@ class TeamController extends Controller
                 'plan' => $workspace->plan_name,
             ],
             'members' => $workspace->users()
-                ->select('users.id', 'users.name', 'users.email', 'users.bio', 'users.timezone')
+                ->select('users.id', 'users.name', 'users.email', 'users.bio', 'users.timezone', 'users.last_seen_at')
                 ->get()
                 ->map(fn ($member) => [
                     'id' => $member->id,
@@ -47,6 +47,7 @@ class TeamController extends Controller
                     'email' => $member->email,
                     'bio' => $member->bio,
                     'timezone' => $member->timezone,
+                    'last_seen_at' => $member->last_seen_at?->toISOString(),
                     'role' => $member->pivot->role,
                     'permissions' => json_decode($member->pivot->permissions, true) ?? [],
                     'joined_at' => $member->pivot->created_at,
@@ -290,6 +291,56 @@ class TeamController extends Controller
     }
 
     /**
+     * Perform a bulk action (remove or change_role) on multiple workspace members.
+     */
+    public function bulkAction(Request $request): RedirectResponse
+    {
+        $currentUser = $request->user();
+        $workspace = $currentUser->currentWorkspace;
+        Gate::authorize('manageTeam', $workspace);
+
+        $validated = $request->validate([
+            'action' => ['required', Rule::in(['remove', 'change_role'])],
+            'user_ids' => ['required', 'array', 'min:1'],
+            'user_ids.*' => ['required', 'integer', 'exists:users,id'],
+            'role' => ['required_if:action,change_role', Rule::in([Workspace::ROLE_ADMIN, Workspace::ROLE_MEMBER, Workspace::ROLE_VIEWER])],
+        ]);
+
+        $targets = User::whereIn('id', $validated['user_ids'])->get();
+        $processed = 0;
+
+        foreach ($targets as $target) {
+            if ($workspace->userIsOwner($target) || $target->id === $currentUser->id || ! $workspace->hasUser($target)) {
+                continue;
+            }
+
+            if ($validated['action'] === 'remove') {
+                $workspace->removeUser($target);
+                $workspace->syncSubscriptionQuantity();
+
+                if ($target->current_workspace_id === $workspace->id) {
+                    $personalWorkspace = $target->personalWorkspace();
+                    if ($personalWorkspace) {
+                        $target->switchWorkspace($personalWorkspace);
+                    }
+                }
+            } else {
+                $workspace->updateUserRole($target, $validated['role']);
+            }
+
+            $processed++;
+        }
+
+        $noun = $processed !== 1 ? 'members' : 'member';
+
+        $message = $validated['action'] === 'remove'
+            ? "{$processed} {$noun} removed from the workspace."
+            : "{$processed} {$noun} role updated to {$validated['role']}.";
+
+        return redirect()->back()->with('success', $message);
+    }
+
+    /**
      * Cancel a pending invitation.
      */
     public function cancelInvitation(Request $request, WorkspaceInvitation $invitation): RedirectResponse
@@ -307,5 +358,24 @@ class TeamController extends Controller
 
         return redirect()->back()
             ->with('success', 'Invitation cancelled.');
+    }
+
+    /**
+     * Resend an invitation, resetting the expiry to 7 days from now.
+     */
+    public function resendInvitation(Request $request, WorkspaceInvitation $invitation): RedirectResponse
+    {
+        $user = $request->user();
+        $workspace = $user->currentWorkspace;
+        Gate::authorize('manageTeam', $workspace);
+
+        if ($invitation->workspace_id !== $workspace->id) {
+            abort(403);
+        }
+
+        $this->invitationService->invite($workspace, $invitation->email, $invitation->role);
+
+        return redirect()->back()
+            ->with('success', 'Invitation resent.');
     }
 }

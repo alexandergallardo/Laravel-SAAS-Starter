@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export interface TourStep {
     target: string;
@@ -14,45 +14,64 @@ const TOUR_STEPS: TourStep[] = [
         description: 'This is your workspace dashboard. Get a quick overview of your plan, team, and recent activity at a glance.',
     },
     {
-        target: '#nav-team',
-        title: 'Manage Your Team',
-        description: 'Invite team members, assign roles, and control access to your workspace from the Team section.',
+        target: '[data-tour="workspace-switcher"]',
+        title: 'Workspace Switcher',
+        description: 'Switch between workspaces, create new ones, or access workspace settings from this menu.',
     },
     {
-        target: '#nav-billing',
-        title: 'Billing & Plans',
-        description: 'View your current plan, upgrade for more features, and manage invoices in the Billing section.',
+        target: '[data-tour="nav-usage"]',
+        title: 'Usage & Analytics',
+        description: 'Track your workspace usage, view activity logs, and monitor your plan limits here.',
     },
     {
-        target: '#nav-settings',
-        title: 'Workspace Settings',
-        description: 'Customise your workspace name, branding, security policies, and much more in Settings.',
+        target: '[data-tour="user-menu"]',
+        title: 'Your Account',
+        description: 'Access your profile settings, billing, team management, and support tickets from this menu.',
     },
 ];
 
 export function useTour() {
     const [step, setStep] = useState(0);
     const [visible, setVisible] = useState(true);
+    const [mounted, setMounted] = useState(false);
 
-    const complete = () => {
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const complete = useCallback(() => {
         router.post('/tour/complete', {}, { preserveState: true, preserveScroll: true });
         setVisible(false);
-    };
+    }, []);
 
-    const next = () => {
+    const next = useCallback(() => {
         if (step < TOUR_STEPS.length - 1) {
             setStep((s) => s + 1);
         } else {
             complete();
         }
-    };
+    }, [step, complete]);
+
+    const skip = useCallback(() => {
+        complete();
+    }, [complete]);
+
+    // Get current step info
+    const currentStep = TOUR_STEPS[step];
+    
+    // Check if current step's target exists
+    const currentTargetExists = mounted && typeof document !== 'undefined' 
+        ? document.querySelector(currentStep.target) !== null 
+        : false;
 
     return {
         step,
         steps: TOUR_STEPS,
-        visible,
+        visible: visible && mounted,
         next,
-        skip: complete,
+        skip,
         complete,
+        currentStep,
+        currentTargetExists,
     };
 }

@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ImpersonationLog;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Activitylog\Models\Activity;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UserController extends Controller
@@ -32,6 +34,7 @@ class UserController extends Controller
                 'email' => $user->email,
                 'is_superadmin' => $user->is_superadmin,
                 'created_at' => $user->created_at,
+                'last_seen_at' => $user->last_seen_at,
                 'deleted_at' => $user->deleted_at,
             ])
             ->withQueryString();
@@ -41,6 +44,56 @@ class UserController extends Controller
             'filters' => [
                 'search' => $search,
             ],
+        ]);
+    }
+
+    /**
+     * Show admin detail view for a user, including impersonation audit log.
+     */
+    public function show(int $id): Response
+    {
+        $user = User::withTrashed()->findOrFail($id);
+
+        $impersonationLogs = ImpersonationLog::with('impersonator:id,name,email')
+            ->where('impersonated_id', $user->id)
+            ->latest('started_at')
+            ->limit(20)
+            ->get()
+            ->map(fn ($log) => [
+                'id' => $log->id,
+                'impersonator_name' => $log->impersonator?->name ?? 'Unknown',
+                'impersonator_email' => $log->impersonator?->email ?? '',
+                'ip_address' => $log->ip_address,
+                'started_at' => $log->started_at?->toISOString(),
+                'ended_at' => $log->ended_at?->toISOString(),
+            ]);
+
+        $activityLog = Activity::where('subject_type', User::class)
+            ->where('subject_id', $user->id)
+            ->orWhere(fn ($q) => $q->where('event', 'impersonated')->where('subject_id', $user->id))
+            ->latest()
+            ->limit(10)
+            ->get()
+            ->map(fn (Activity $a) => [
+                'id' => $a->id,
+                'event' => $a->event,
+                'description' => $a->description,
+                'causer_name' => $a->causer?->name ?? 'System',
+                'created_at' => $a->created_at?->toISOString(),
+            ]);
+
+        return Inertia::render('admin/users/show', [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'is_superadmin' => $user->is_superadmin,
+                'created_at' => $user->created_at->toISOString(),
+                'deleted_at' => $user->deleted_at?->toISOString(),
+                'email_verified_at' => $user->email_verified_at?->toISOString(),
+            ],
+            'impersonationLogs' => $impersonationLogs,
+            'activityLog' => $activityLog,
         ]);
     }
 
@@ -134,6 +187,37 @@ class UserController extends Controller
         User::whereIn('id', $userIds)->each(fn (User $user) => $user->delete());
 
         return back()->with('success', "{$count} user(s) suspended.");
+    }
+
+    /**
+     * Export all users as CSV.
+     */
+    public function export(): StreamedResponse
+    {
+        $users = User::withTrashed()
+            ->withCount('workspaces')
+            ->latest()
+            ->get(['id', 'name', 'email', 'is_superadmin', 'email_verified_at', 'created_at', 'deleted_at']);
+
+        return response()->streamDownload(function () use ($users): void {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['ID', 'Name', 'Email', 'Superadmin', 'Workspaces', 'Email Verified', 'Created At', 'Deleted At']);
+
+            foreach ($users as $user) {
+                fputcsv($handle, [
+                    $user->id,
+                    $user->name,
+                    $user->email,
+                    $user->is_superadmin ? 'Yes' : 'No',
+                    $user->workspaces_count,
+                    $user->email_verified_at?->toDateTimeString() ?? 'Not verified',
+                    $user->created_at->toDateTimeString(),
+                    $user->deleted_at?->toDateTimeString() ?? '',
+                ]);
+            }
+
+            fclose($handle);
+        }, 'users-'.now()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv']);
     }
 
     /**

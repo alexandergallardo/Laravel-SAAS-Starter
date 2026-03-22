@@ -16,6 +16,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
+import WorkspaceLayout from '@/layouts/settings/workspace-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft, RotateCcw, Trash2 } from 'lucide-react';
@@ -65,7 +66,11 @@ export default function WorkspaceTrash({ trashedWorkspaces }: WorkspaceTrashProp
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Trash" />
 
-            <div className="space-y-6">
+            <WorkspaceLayout
+                title="Trash"
+                description="Restore or permanently delete workspaces. Trashed workspaces are automatically removed after 30 days."
+                fullWidth
+            >
                 <div className="flex items-center justify-between">
                     <Heading
                         title="Trash"
@@ -112,14 +117,14 @@ export default function WorkspaceTrash({ trashedWorkspaces }: WorkspaceTrashProp
                                                     {workspace.name}
                                                 </CardTitle>
                                                 <CardDescription>
-                                                    Deleted {new Date(workspace.deleted_at).toLocaleDateString()} · {workspace.days_remaining} days remaining
+                                                    Deleted {new Date(workspace.deleted_at).toLocaleDateString()} • {workspace.days_remaining} days remaining
                                                 </CardDescription>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Button
-                                                size="sm"
                                                 variant="outline"
+                                                size="sm"
                                                 disabled={processing}
                                                 onClick={() => handleRestore(workspace)}
                                             >
@@ -127,8 +132,8 @@ export default function WorkspaceTrash({ trashedWorkspaces }: WorkspaceTrashProp
                                                 Restore
                                             </Button>
                                             <Button
-                                                size="sm"
                                                 variant="destructive"
+                                                size="sm"
                                                 disabled={processing}
                                                 onClick={() => setConfirmDelete(workspace)}
                                             >
@@ -142,31 +147,31 @@ export default function WorkspaceTrash({ trashedWorkspaces }: WorkspaceTrashProp
                         ))}
                     </div>
                 )}
-            </div>
 
-            <Dialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Permanently delete workspace?</DialogTitle>
-                        <DialogDescription>
-                            This will permanently delete <strong>{confirmDelete?.name}</strong> and all associated data.
-                            This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setConfirmDelete(null)}>
-                            Cancel
-                        </Button>
-                        <Button
-                            variant="destructive"
-                            disabled={processing}
-                            onClick={handleForceDelete}
-                        >
-                            {processing ? 'Deleting...' : 'Delete Forever'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                <Dialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Permanently delete workspace?</DialogTitle>
+                            <DialogDescription>
+                                This will permanently delete <strong>{confirmDelete?.name}</strong> and all associated data.
+                                This action cannot be undone.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setConfirmDelete(null)}>
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                disabled={processing}
+                                onClick={handleForceDelete}
+                            >
+                                {processing ? 'Deleting...' : 'Delete Forever'}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </WorkspaceLayout>
         </AppLayout>
     );
 }

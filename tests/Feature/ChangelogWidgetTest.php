@@ -98,8 +98,7 @@ it('shows has_unread true when new entries since last read', function () {
 it('mark-read updates changelog_read_at', function () {
     $this->actingAs($this->user)
         ->postJson('/changelog-widget/mark-read')
-        ->assertOk()
-        ->assertJsonPath('success', true);
+        ->assertRedirect();
 
     expect($this->user->fresh()->changelog_read_at)->not->toBeNull();
 });

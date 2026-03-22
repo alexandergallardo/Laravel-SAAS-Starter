@@ -69,6 +69,10 @@ class WorkspaceService
             $updateData['accent_color'] = $data['accent_color'];
         }
 
+        if (array_key_exists('billing_email', $data)) {
+            $updateData['billing_email'] = $data['billing_email'] ?: null;
+        }
+
         $workspace->update($updateData);
 
         return $workspace->fresh();

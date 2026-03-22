@@ -19,7 +19,7 @@ it('allows an authenticated user to submit feedback', function () {
             'type' => 'general',
             'message' => 'This is some general feedback from the app.',
         ])
-        ->assertOk();
+        ->assertRedirect();
 
     expect(Feedback::where('user_id', $this->user->id)->exists())->toBeTrue();
 });

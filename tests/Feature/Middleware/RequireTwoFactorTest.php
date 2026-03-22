@@ -140,6 +140,29 @@ it('allows 2FA setup routes for members without 2FA', function () {
     expect($response->getContent())->toBe('ok');
 });
 
+it('exempts super admins even without 2FA', function () {
+    $owner = User::factory()->withoutTwoFactor()->create();
+    $workspace = Workspace::factory()->create([
+        'owner_id' => $owner->id,
+        'require_two_factor' => true,
+    ]);
+
+    $superAdmin = User::factory()->withoutTwoFactor()->create([
+        'current_workspace_id' => $workspace->id,
+        'is_superadmin' => true,
+    ]);
+    $workspace->users()->attach($superAdmin->id, ['role' => 'member']);
+    $superAdmin->load('currentWorkspace');
+
+    $middleware = new RequireTwoFactor;
+    $request = Request::create('/dashboard');
+    $request->setUserResolver(fn () => $superAdmin);
+
+    $response = $middleware->handle($request, fn () => response('ok'));
+
+    expect($response->getContent())->toBe('ok');
+});
+
 it('allows the logout route for members without 2FA', function () {
     $owner = User::factory()->withoutTwoFactor()->create();
     $workspace = Workspace::factory()->create([

@@ -31,7 +31,49 @@ The AI agent is now continually managing and executing the roadmap autonomously.
 - [x] **Task 126**: Webhook Signature Verification Guide — `WebhookEndpointController::verificationGuide()` at `GET /workspaces/{workspace}/webhooks/verification-guide`, Inertia page with step-by-step explanation, PHP/Node.js/Python code samples with copy buttons, link from webhooks index. ✅ (6 tests, 41 assertions)
 - [x] **Task 127**: User Profile Completeness Score — `User::profileCompletenessScore()` checks avatar, bio, non-UTC timezone, 2FA (4 checks × 25 pts each), shared as `auth.user.profile_completeness` via Inertia middleware, progress bar card on profile settings page when < 100%. ✅ (8 tests, 29 assertions)
 
-## 🚀 Active Sprint 31: Retention, Insights & Developer Tools
+## 🚀 Active Sprint 36: Developer Experience & Admin Power Tools
+
+- [x] **Task 153**: Workspace API Key Last Used Timestamp — `last_used_at` column + `recordUsage()` were pre-existing; enhanced display from absolute date to `formatDistanceToNow()` relative time on API keys page. ✅ (4 tests, 34 assertions)
+- [x] **Task 154**: Admin Impersonation Audit Log — `ImpersonationController::impersonate()` now logs Spatie activity entry (event=`impersonated`, causer=admin, subject=target); `GET /admin/users/{user}` show page with impersonation history + activity log; "View Detail" added to admin users dropdown. ✅ (5 tests, 40 assertions)
+- [x] **Task 155**: Workspace Onboarding Progress Bar — `WorkspaceController::computeOnboardingProgress()` computes 5-step score (has_logo, has_members, has_webhook, has_api_key, owner_has_2fa); `onboardingProgress` prop in `settings()` Inertia response; progress bar card with step checklist on workspace settings page (hidden when 100%). ✅ (6 tests, 69 assertions)
+- [x] **Task 156**: Super Admin Quick Stats Widget — `DashboardController::quickStats()` at `GET /admin/quick-stats` returns JSON (total_users, total_workspaces, mrr); `AdminQuickStatsWidget` fetches and renders a compact 3-column stat bar in the admin sidebar footer with loading skeleton. ✅ (4 tests, 10 assertions)
+- [x] **Task 157**: User Last Seen Timestamp — Track `last_seen_at` on users (updated on each authenticated web request via middleware); display in admin user list and workspace team member list. ✅ (6 tests, 34 assertions)
+- [x] **Task 158**: User Login Methods Summary — `SecuritySummaryController` at `GET /settings/security-summary` returns JSON with password status, 2FA status, connected social accounts, security score (0-100), and recommendations; `SecuritySummaryCard` React component displays on profile settings with visual indicators and quick action links. ✅ (12 tests, 48 assertions)
+- [x] **Task 159**: Session Activity Summary — `SessionSummaryController` at `GET /settings/session-summary` returns session count, current device info, and other sessions summary; `SessionSummaryCard` component on profile settings shows active sessions with "Sign Out All Other Devices" action; integrates with existing `SessionController` revoke functionality. ✅ (8 tests, 24 assertions)
+
+## 🏁 Completed Sprint 35: Security, Observability & Quality-of-Life
+
+- [x] **Task 148**: Workspace Audit Log Export — `WorkspaceActivityController::export()` at `GET /workspaces/{workspace}/activity/export` streams CSV (Date, Event, Causer, Subject Type, Description); "Export CSV" button added to workspace activity page. ✅ (7 tests, 24 assertions)
+- [x] **Task 149**: Admin User Export CSV — `UserController::export()` at `GET /admin/users/export` streams CSV (ID, Name, Email, Superadmin, Workspaces, Email Verified, Created At, Deleted At); "Export All" button added next to search on admin users page. ✅ (7 tests, 23 assertions)
+- [x] **Task 150**: Workspace Member Count Limit Warning — When `canInvite` is false, amber `Alert` card renders at top of team page with `memberLimitMessage` text and "Upgrade Plan" CTA linking to billing. ✅ (5 tests, 57 assertions)
+- [x] **Task 151**: Login Streak Tracker — `User::currentLoginStreak()` and `longestLoginStreak()` computed from `login_activities`; shared via `ProfileController::edit()` as `loginStreak`; displayed as a streak card on profile settings page. ✅ (11 tests, 25 assertions)
+- [x] **Task 152**: Admin Dashboard Sparklines — `DashboardController` computes 7-day `sparklines` (new_users, new_workspaces, new_subscriptions); inline SVG `Sparkline` polyline component renders in all 4 metric cards on admin dashboard. ✅ (4 tests, 54 assertions)
+
+## 🏁 Completed Sprint 34: Power UX & Platform Hardening
+
+- [x] **Task 143**: Workspace Member Search & Filter — search input with clear button filters members by name/email client-side; role filter dropdown (All/Owner/Admin/Member/Viewer); results count badge in title when active; empty state with "Clear filters" link. ✅ (5 tests, 47 assertions)
+- [x] **Task 144**: Admin Workspace Usage Heatmap — `GET /admin/workspace-activity-heatmap` aggregates `api_request_logs` daily counts for last 52 weeks; React page renders GitHub-style contribution heatmap with color-coded cells, month labels, legend, and 3-stat summary row. ✅ (5 tests, 48 assertions)
+- [x] **Task 145**: Two-Factor Recovery Code Regeneration — Fortify's `POST /user/two-factor-recovery-codes` already wired; "Regenerate Codes" button already in `TwoFactorRecoveryCodes` component (shown when codes visible); tested in `TwoFactorFlowTest`. ✅ (pre-existing)
+- [x] **Task 146**: Workspace Billing Email Override — nullable `billing_email` on workspaces migration; `WorkspaceRequest` validates email format; `WorkspaceService::update()` persists it; billing email card added to workspace settings page. ✅ (5 tests, 18 assertions)
+- [x] **Task 147**: Admin Broadcast System Message — `BroadcastController` + `DispatchBroadcastMessage` job + `PlatformBroadcast` notification already existed; added optional `action_url` column (migration + validation + `toArray()`); action URL field added to broadcast form UI. ✅ (6 tests, 21 assertions)
+
+## 🏁 Completed Sprint 33: Analytics, Automation & Developer Ergonomics
+
+- [x] **Task 138**: Workspace Invitation Expiry — `expires_at` already on model (7-day default); added `POST /team/invitations/{invitation}/resend` endpoint that resets expiry + resends notification; "Resend" button + "Expired" badge added to pending invitations list in team page. ✅ (8 tests, 19 assertions)
+- [x] **Task 139**: Admin User Impersonation Audit Trail — `ImpersonationLog` model and index page already existed; added `GET /admin/impersonation-logs/export` CSV endpoint + Export CSV button to the impersonation logs page. ✅ (5 tests, 23 assertions)
+- [x] **Task 140**: Workspace Transfer Ownership — `POST /team/transfer-ownership/{user}` swaps `owner_id` + updates pivot roles; Danger Zone page updated with Select dropdown (admin users), confirmation step, owner-only guard; `WorkspaceController::dangerZone()` passes `admins` list. ✅ (6 tests, 13 assertions)
+- [x] **Task 141**: Notification Read-All Button — `POST /api/notifications/mark-all-read` already implemented in `NotificationController::markAllAsRead()`; "Mark all as read" button present in both notifications dropdown and full notifications page. ✅ (pre-existing)
+- [x] **Task 142**: API Key Last-Used At — `last_used_at` already on `workspace_api_keys` migration; `AuthenticateApiKey` middleware calls `$apiKey->recordUsage()` on every request; displayed in API keys table. ✅ (pre-existing)
+
+## 🏁 Completed Sprint 32: Compliance, Power Features & UX Polish
+
+- [x] **Task 133**: Workspace Member Bulk Actions — checkboxes on team member rows, floating action bar when members selected, `POST /team/bulk-action` endpoint supporting `remove` and `change_role` actions on multiple user IDs. ✅ (12 tests, 29 assertions)
+- [x] **Task 134**: GDPR User Data Export — Enhanced existing `ExportPersonalDataJob` to include `login_history` (last 500 login activities) and `notifications` (last 500 database notifications) in the ZIP export alongside profile, workspaces, and connected accounts. ✅ (5 tests, 13 assertions)
+- [x] **Task 135**: Admin Workspace Plan Override — `plan_override` nullable varchar on workspaces table, superadmin can set/clear via `POST /admin/workspaces/{id}/override-plan`, `plan_name` resolves override first. "Override Plan" menu item + dialog in admin workspaces table. ✅ (8 tests, 15 assertions)
+- [x] **Task 136**: Workspace Settings Quick Stats — compact stats row at top of workspace settings page (total members, plan, workspace age, API keys count). Makes the settings page richer at a glance. ✅ (6 tests, 12 assertions)
+- [x] **Task 137**: Custom Error Pages — `resources/js/pages/error.tsx` React page handles 403/404/429/500/503 with themed layout and back/home buttons. Registered via `$exceptions->respond()` in `bootstrap/app.php` — only renders Inertia error page for `X-Inertia` requests. ✅ (5 tests, 9 assertions)
+
+## 🏁 Completed Sprint 31: Retention, Insights & Developer Tools
 
 - [x] **Task 128**: Workspace Retention Insights Widget — `WorkspaceRetentionController::index()` at `GET /workspace-retention-insights`, returns total_members/active_last_30_days/retention_rate JSON, `WorkspaceRetentionWidget` card with progress bar and color-coded rate, placed alongside Activity Feed on dashboard in a 2-column grid. ✅ (8 tests, 19 assertions)
 - [x] **Task 129**: API Request Log Viewer — `ApiUsageController::logs()` at `GET /workspaces/api-usage/logs`, paginated (15/page) Inertia page with method/status-group/path filters, color-coded method badges and status codes, throttled indicator, "View Request Logs" button added to api-usage dashboard. ✅ (10 tests, 112 assertions)
@@ -105,6 +147,26 @@ The AI agent is now continually managing and executing the roadmap autonomously.
 - **Sprint 12**: Enterprise Mechanics (Seat-Based Billing, Data Retention, 2FA Enforcement).
 
 ## 📝 Changelog
+
+- **2026-03-22**: Fixed Help Center Page: Created `/help` page component with search bar, help categories (Getting Started, Account & Billing, Support Tickets, API Documentation), quick links, and contact support CTA; added route `GET /help` in web.php; page linked from sidebar footer.
+
+- **2026-03-22**: Fixed Support Tickets Page Layout: Added proper `title` and `description` props to SettingsLayout; removed duplicate heading (layout now handles it); added CTA button in empty state; improved empty state icon (MessageSquare) and description; all 10 ticket tests pass.
+
+- **2026-03-22**: Fixed Privacy Settings Page: Added missing route `GET /settings/privacy` in `routes/settings.php` that was referenced in the navigation menu but returned 404.
+
+- **2026-03-22**: Improved Settings Menu: Reorganized into 5 logical sections (Workspace, Team, Analytics, Security, Account); added consistent icons to ALL menu items (Building2, CreditCard, Users, FileUp, BarChart3, TrendingUp, Activity, History, Shield, Webhook, AlertTriangle); renamed "Team" to "Members" and "Activity" to "Activity Log" for clarity; all items now have icons - no more empty icon slots.
+
+- **2026-03-22**: Fixed Billing Page: Added null check before `Object.entries(usage)` on line 373 to prevent TypeError when usage data is deferred/undefined; all 46 billing tests pass.
+
+- **2026-03-22**: Fixed Product Tour: Tour now waits for DOM to be ready before checking targets; added fallback to centered modal when targets not found; improved retry logic with 10 attempts; added close button and better error handling.
+
+- **2026-03-22**: Improved onboarding wizard step 3 (Plan Selection): Replaced ugly dropdown with beautiful plan cards showing pricing, features, and limits; added billing period toggle (monthly/yearly) with savings badge; visual plan selection with clear CTAs; responsive 3-column layout with popular plan highlighting.
+
+- **2026-03-22**: Task 159 (Session Activity Summary): Created `SessionSummaryController` returning session summary JSON with device/browser/platform parsing; built `SessionSummaryCard` React component showing current session, other sessions count, last activity info; integrated with existing session revocation endpoints; 8 Pest tests with 24 assertions; documentation at `/docs/features/session-summary.md`.
+
+- **2026-03-22**: Task 158 (User Login Methods Summary): Created `SecuritySummaryController` with authentication methods aggregation and security score calculation; built `SecuritySummaryCard` React component with password/2FA/social account indicators, color-coded progress bar, and contextual recommendations; added `ConnectedAccountFactory` for testing; 12 Pest tests with 48 assertions; documentation at `/docs/features/security-summary.md`.
+
+- **2026-03-22**: Task 157 (User Last Seen Timestamp): Verified existing implementation - `TrackLastSeen` middleware with 5-minute throttle, `last_seen_at` column on users, displayed in admin user list and team member pages; fixed Pest tests to include workspace context, all 6 tests passing. Created `/docs/features/user-last-seen.md` documentation.
 
 - **2026-03-13**: Task 117 (Full Notification History Page): added `?filter=unread` support to notifications page (backend query + Inertia prop), `unreadCount` shared prop, `DELETE /api/notifications/{id}` to remove a single notification, `DELETE /api/notifications/read` to bulk-clear all read notifications; updated notifications page with All/Unread filter tabs, per-notification delete button, and "Clear read" action. *(6 new tests, 58 assertions total)*
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import WorkspaceLayout from '@/layouts/settings/workspace-layout';
 import { Head, useForm, router } from '@inertiajs/react';
 import { useTranslations } from '@/hooks/use-translations';
 import { Workspace } from '@/types';
@@ -68,7 +68,7 @@ export default function WorkspaceWebhooks({ workspace, endpoints }: WebhookLogsP
         >
             <Head title={t('workspace.webhooks.page_title', 'Configuration & Webhooks')} />
 
-            <SettingsLayout
+            <WorkspaceLayout
                 title={t('workspace.webhooks.heading', 'Webhooks')}
                 description={t('workspace.webhooks.description', 'Manage external webhook endpoints triggered by workspace activity.')}
                 fullWidth
@@ -235,7 +235,7 @@ export default function WorkspaceWebhooks({ workspace, endpoints }: WebhookLogsP
                         </CardContent>
                     </Card>
                 </div>
-            </SettingsLayout>
+            </WorkspaceLayout>
         </AppLayout>
     );
 }

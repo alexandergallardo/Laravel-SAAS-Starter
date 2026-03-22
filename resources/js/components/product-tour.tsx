@@ -8,9 +8,15 @@ export function ProductTour() {
         return null;
     }
 
+    const currentStep = steps[step];
+    
+    if (!currentStep) {
+        return null;
+    }
+
     return (
         <TourTooltip
-            step={steps[step]}
+            step={currentStep}
             stepIndex={step}
             totalSteps={steps.length}
             onNext={next}

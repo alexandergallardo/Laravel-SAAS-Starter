@@ -34,6 +34,7 @@ import {
     Users,
     XCircle,
 } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 import { useEffect, useState, type FormEvent } from 'react';
 
 interface UserNote {
@@ -160,6 +161,7 @@ interface PaginatedUser {
     email: string;
     is_superadmin: boolean;
     created_at: string;
+    last_seen_at: string | null;
     deleted_at: string | null;
 }
 
@@ -299,6 +301,12 @@ export default function AdminUsers({ users, filters }: AdminUsersProps) {
                         </div>
                         <Button type="submit" size="sm">Search</Button>
                     </form>
+                    <Button variant="outline" size="sm" asChild>
+                        <a href="/admin/users/export">
+                            <Download className="mr-1.5 h-3.5 w-3.5" />
+                            Export All
+                        </a>
+                    </Button>
                 </div>
 
                 {/* Bulk Actions Toolbar */}
@@ -345,6 +353,7 @@ export default function AdminUsers({ users, filters }: AdminUsersProps) {
                                 <th className="px-6 py-3 font-medium">User</th>
                                 <th className="px-6 py-3 font-medium">Email</th>
                                 <th className="px-6 py-3 font-medium">Status</th>
+                                <th className="px-6 py-3 font-medium">Last Seen</th>
                                 <th className="px-6 py-3 font-medium">Joined</th>
                                 <th className="px-6 py-3 font-medium text-right">Actions</th>
                             </tr>
@@ -352,7 +361,7 @@ export default function AdminUsers({ users, filters }: AdminUsersProps) {
                         <tbody className="divide-y divide-border">
                             {users.data.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
+                                    <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
                                         No users found matching your search.
                                     </td>
                                 </tr>
@@ -389,6 +398,11 @@ export default function AdminUsers({ users, filters }: AdminUsersProps) {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-muted-foreground">
+                                            {user.last_seen_at
+                                                ? formatDistanceToNow(new Date(user.last_seen_at), { addSuffix: true })
+                                                : <span className="text-xs italic">Never</span>}
+                                        </td>
+                                        <td className="px-6 py-4 text-muted-foreground">
                                             {new Date(user.created_at).toLocaleDateString()}
                                         </td>
                                         <td className="px-6 py-4 text-right">
@@ -409,6 +423,11 @@ export default function AdminUsers({ users, filters }: AdminUsersProps) {
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={() => router.get(`/admin/users/${user.id}`)}>
+                                                            <UserCog className="mr-2 h-4 w-4" />
+                                                            View Detail
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
                                                         <DropdownMenuItem onClick={() => toggleSuperadmin(user)}>
                                                             {user.is_superadmin ? (
                                                                 <>

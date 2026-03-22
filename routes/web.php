@@ -30,6 +30,7 @@ use App\Http\Controllers\Admin\UserApiTokenController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UserNoteController;
 use App\Http\Controllers\Admin\UserSessionController;
+use App\Http\Controllers\Admin\WorkspaceActivityHeatmapController;
 use App\Http\Controllers\ApiUsageController;
 use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\Auth\SocialiteController;
@@ -136,6 +137,7 @@ Route::middleware(['auth', 'verified', 'onboarded', 'workspace', 'require2fa', '
         Route::delete('/trash/{workspace}', [WorkspaceTrashController::class, 'forceDelete'])->name('trash.force-delete');
 
         Route::get('/{workspace}/activity', [WorkspaceActivityController::class, 'index'])->name('activity');
+        Route::get('/{workspace}/activity/export', [WorkspaceActivityController::class, 'export'])->name('activity.export');
         Route::get('/analytics', [WorkspaceAnalyticsController::class, 'index'])->name('analytics');
 
         // Workspace API Keys
@@ -170,8 +172,10 @@ Route::middleware(['auth', 'verified', 'onboarded', 'workspace', 'require2fa', '
         Route::put('/members/{user}/permissions', [TeamController::class, 'updatePermissions'])->name('update-permissions');
         Route::post('/transfer-ownership/{user}', [TeamController::class, 'transferOwnership'])->name('transfer-ownership');
         Route::delete('/invitations/{invitation}', [TeamController::class, 'cancelInvitation'])->name('cancel-invitation');
+        Route::post('/invitations/{invitation}/resend', [TeamController::class, 'resendInvitation'])->name('resend-invitation');
         Route::get('/activity-report', [MemberActivityController::class, 'index'])->name('activity-report');
         Route::get('/export-members', [TeamController::class, 'exportMembers'])->name('export-members');
+        Route::post('/bulk-action', [TeamController::class, 'bulkAction'])->name('bulk-action');
 
         // CSV Import
         Route::get('/import', [TeamImportController::class, 'index'])->name('import');
@@ -262,6 +266,11 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['onboarded'])->group(function () {
         Route::get('/notifications', [NotificationController::class, 'page'])->name('notifications.page');
 
+        // Help Center
+        Route::get('/help', function () {
+            return Inertia::render('help');
+        })->name('help.index');
+
         // Notifications API
         Route::prefix('api/notifications')->middleware('throttle:api')->name('notifications.')->group(function () {
             Route::get('/', [NotificationController::class, 'index'])->name('index');
@@ -308,16 +317,19 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
 
     Route::middleware([RequireAdminTwoFactor::class])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/quick-stats', [DashboardController::class, 'quickStats'])->name('quick-stats');
         Route::get('/search', [AdminSearchController::class, 'search'])->name('search');
         Route::post('/impersonate/{user}', [ImpersonationController::class, 'impersonate'])->name('impersonate');
 
         // User Management
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
         Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
         Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
         Route::post('/users/{user}/restore', [UserController::class, 'restore'])->name('users.restore');
         Route::post('/users/bulk-verify-email', [UserController::class, 'bulkVerifyEmail'])->name('users.bulk-verify-email');
         Route::post('/users/bulk-suspend', [UserController::class, 'bulkSuspend'])->name('users.bulk-suspend');
+        Route::get('/users/export', [UserController::class, 'export'])->name('users.export');
         Route::post('/users/bulk-export', [UserController::class, 'bulkExport'])->name('users.bulk-export');
         Route::get('/users/{user}/sessions', [UserSessionController::class, 'index'])->name('users.sessions.index');
         Route::delete('/users/{user}/sessions/{sessionId}', [UserSessionController::class, 'destroy'])->name('users.sessions.destroy');
@@ -335,11 +347,13 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
         Route::get('/workspaces', [App\Http\Controllers\Admin\WorkspaceController::class, 'index'])->name('workspaces.index');
         Route::post('/workspaces/{workspace}/suspend', [App\Http\Controllers\Admin\WorkspaceController::class, 'suspend'])->name('workspaces.suspend');
         Route::post('/workspaces/{workspace}/unsuspend', [App\Http\Controllers\Admin\WorkspaceController::class, 'unsuspend'])->name('workspaces.unsuspend');
+        Route::post('/workspaces/{workspace}/override-plan', [App\Http\Controllers\Admin\WorkspaceController::class, 'overridePlan'])->name('workspaces.override-plan');
 
         // Audit Logs
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
         Route::get('/audit-logs/export', [AuditLogController::class, 'export'])->name('audit-logs.export');
         Route::get('/impersonation-logs', [ImpersonationLogController::class, 'index'])->name('impersonation-logs.index');
+        Route::get('/impersonation-logs/export', [ImpersonationLogController::class, 'export'])->name('impersonation-logs.export');
 
         // Broadcasts
         Route::get('/broadcasts', [BroadcastController::class, 'index'])->name('broadcasts.index');
@@ -421,6 +435,9 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
 
         // Notification Analytics
         Route::get('/notification-analytics', [NotificationAnalyticsController::class, 'index'])->name('notification-analytics.index');
+
+        // Workspace Activity Heatmap
+        Route::get('/workspace-activity-heatmap', WorkspaceActivityHeatmapController::class)->name('workspace-activity-heatmap.index');
 
         // Onboarding Insights
         Route::get('/onboarding-insights', [OnboardingInsightsController::class, 'index'])->name('onboarding-insights.index');

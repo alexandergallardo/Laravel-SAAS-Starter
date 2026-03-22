@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import Layout from '@/layouts/settings/layout';
+import AppLayout from '@/layouts/app-layout';
+import ProfileLayout from '@/layouts/settings/profile-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
@@ -25,14 +26,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Ticket, Plus } from 'lucide-react';
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Support Tickets',
-        href: '/settings/tickets',
-    },
-];
+import { Ticket, Plus, MessageSquare } from 'lucide-react';
 
 interface TicketData {
     id: number;
@@ -52,6 +46,13 @@ interface IndexProps {
 }
 
 export default function TicketsIndex({ tickets }: IndexProps) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: 'Support Tickets',
+            href: '/settings/tickets',
+        },
+    ];
+
     const [isOpen, setIsOpen] = useState(false);
     const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
         subject: '',
@@ -96,18 +97,17 @@ export default function TicketsIndex({ tickets }: IndexProps) {
     };
 
     return (
-        <Layout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Support Tickets" />
 
-            <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h2 className="text-xl font-semibold text-foreground">Support Tickets</h2>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                            Manage your support requests and communicate with our team.
-                        </p>
-                    </div>
+            <ProfileLayout
+                title="Support Tickets"
+                description="Manage your support requests and communicate with our team."
+                fullWidth
+            >
 
+            <div className="flex flex-col gap-6">
+                <div className="flex items-center justify-between">
                     <Dialog open={isOpen} onOpenChange={(open) => {
                         setIsOpen(open);
                         if (!open) {
@@ -121,7 +121,7 @@ export default function TicketsIndex({ tickets }: IndexProps) {
                                 Create Ticket
                             </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="sm:max-w-[525px]">
                             <form onSubmit={submitTicket}>
                                 <DialogHeader>
                                     <DialogTitle>Create Support Ticket</DialogTitle>
@@ -228,15 +228,23 @@ export default function TicketsIndex({ tickets }: IndexProps) {
                 ) : (
                     <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center">
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                            <Ticket className="h-6 w-6 text-primary" />
+                            <MessageSquare className="h-6 w-6 text-primary" />
                         </div>
                         <h3 className="mt-4 text-lg font-semibold">No tickets yet</h3>
-                        <p className="mt-2 text-sm text-muted-foreground">
-                            You haven't submitted any support requests. If you need help, feel free to reach out.
+                        <p className="mt-2 text-sm text-muted-foreground max-w-sm">
+                            You haven't submitted any support requests. If you need help, feel free to create a ticket and our team will assist you.
                         </p>
+                        <Button 
+                            className="mt-6" 
+                            onClick={() => setIsOpen(true)}
+                        >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create Your First Ticket
+                        </Button>
                     </div>
                 )}
             </div>
-        </Layout>
+            </ProfileLayout>
+        </AppLayout>
     );
 }

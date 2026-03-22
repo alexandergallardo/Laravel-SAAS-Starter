@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\WorkspaceRequest;
+use App\Models\User;
 use App\Models\Workspace;
 use App\Services\WorkspaceService;
 use Illuminate\Http\RedirectResponse;
@@ -109,8 +110,15 @@ class WorkspaceController extends Controller
                 'personal_workspace' => $workspace->personal_workspace,
                 'owner_id' => $workspace->owner_id,
                 'plan' => $workspace->plan_name,
+                'created_at' => $workspace->created_at,
+                'billing_email' => $workspace->billing_email,
             ],
             'userRole' => $workspace->getUserRole($user),
+            'stats' => [
+                'members_count' => $workspace->users()->count(),
+                'api_keys_count' => $workspace->apiKeys()->count(),
+            ],
+            'onboardingProgress' => $this->computeOnboardingProgress($workspace, $user),
         ]);
     }
 
@@ -184,6 +192,11 @@ class WorkspaceController extends Controller
         $user = $request->user();
         $workspace = $user->currentWorkspace;
 
+        $admins = $workspace->users()
+            ->wherePivot('role', 'admin')
+            ->get(['users.id', 'users.name', 'users.email'])
+            ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name, 'email' => $u->email]);
+
         return Inertia::render('settings/workspace-danger-zone', [
             'workspace' => [
                 'id' => $workspace->id,
@@ -192,6 +205,7 @@ class WorkspaceController extends Controller
                 'owner_id' => $workspace->owner_id,
             ],
             'userRole' => $workspace->getUserRole($user),
+            'admins' => $admins,
         ]);
     }
 
@@ -239,5 +253,49 @@ class WorkspaceController extends Controller
 
         return redirect()->route('dashboard')
             ->with('success', "Switched to {$workspace->name}.");
+    }
+
+    /**
+     * Compute workspace onboarding completion progress.
+     *
+     * @return array{score: int, steps: array<array{key: string, label: string, completed: bool}>}
+     */
+    private function computeOnboardingProgress(Workspace $workspace, User $user): array
+    {
+        $steps = [
+            [
+                'key' => 'has_logo',
+                'label' => 'Upload a workspace logo',
+                'completed' => $workspace->logo !== null,
+            ],
+            [
+                'key' => 'has_members',
+                'label' => 'Invite a team member',
+                'completed' => $workspace->users()->count() > 1,
+            ],
+            [
+                'key' => 'has_webhook',
+                'label' => 'Configure a webhook',
+                'completed' => $workspace->webhookEndpoints()->exists(),
+            ],
+            [
+                'key' => 'has_api_key',
+                'label' => 'Create an API key',
+                'completed' => $workspace->apiKeys()->exists(),
+            ],
+            [
+                'key' => 'owner_has_2fa',
+                'label' => 'Enable two-factor authentication',
+                'completed' => $user->two_factor_secret !== null,
+            ],
+        ];
+
+        $completed = collect($steps)->filter(fn ($s) => $s['completed'])->count();
+        $score = (int) round(($completed / count($steps)) * 100);
+
+        return [
+            'score' => $score,
+            'steps' => $steps,
+        ];
     }
 }

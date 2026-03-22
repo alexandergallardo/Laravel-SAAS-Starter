@@ -3,10 +3,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { toast } from 'sonner';
+import { useToast } from '@/components/ui/toast';
 import AdminLayout from '@/layouts/admin-layout';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { Loader2, Plus, Save } from 'lucide-react';
+import { useTranslations } from '@/hooks/use-translations';
 import { FormEvent, useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
@@ -22,7 +23,8 @@ interface Props {
 }
 
 export default function Translations({ locales, currentLocale, translations = {} }: Props) {
-    const { toast } = useToast();
+    const { addToast } = useToast();
+    const { t: toastT } = useTranslations();
     const [searchQuery, setSearchQuery] = useState('');
     const [updatingKey, setUpdatingKey] = useState<string | null>(null);
 
@@ -43,10 +45,11 @@ export default function Translations({ locales, currentLocale, translations = {}
         e.preventDefault();
         post('/admin/translations', {
             onSuccess: () => {
-                toast({
-                    title: 'Locale Created',
-                    description: `Successfully created translation file for '${data.locale}'`,
-                });
+                addToast(
+                    toastT('admin.translations.locale_created', 'Locale Created') + ': ' + 
+                    toastT('admin.translations.locale_created_desc', `Successfully created translation file for '${data.locale}'`),
+                    'success'
+                );
                 setData('locale', '');
             },
         });
@@ -62,10 +65,11 @@ export default function Translations({ locales, currentLocale, translations = {}
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => {
-                toast({
-                    title: 'Translation Saved',
-                    description: 'The translation string was updated successfully.',
-                });
+                addToast(
+                    toastT('admin.translations.saved', 'Translation Saved') + ': ' + 
+                    toastT('admin.translations.saved_desc', 'The translation string was updated successfully.'),
+                    'success'
+                );
             },
             onFinish: () => {
                 setUpdatingKey(null);

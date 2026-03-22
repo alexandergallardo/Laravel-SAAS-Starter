@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Workspace;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -102,6 +103,13 @@ class DashboardController extends Controller
             }
         }
 
+        // 7-day sparkline data for metric cards
+        $sparklines = [
+            'new_users' => collect(range(6, 0))->map(fn ($d) => User::whereDate('created_at', $now->copy()->subDays($d)->toDateString())->count())->values()->toArray(),
+            'new_workspaces' => collect(range(6, 0))->map(fn ($d) => Workspace::whereDate('created_at', $now->copy()->subDays($d)->toDateString())->count())->values()->toArray(),
+            'new_subscriptions' => collect(range(6, 0))->map(fn ($d) => Subscription::whereDate('created_at', $now->copy()->subDays($d)->toDateString())->count())->values()->toArray(),
+        ];
+
         return Inertia::render('admin/dashboard', [
             'metrics' => [
                 'total_users' => $totalUsers,
@@ -113,10 +121,25 @@ class DashboardController extends Controller
                 'mrr' => $mrr,
                 'churn_rate' => $churnRate,
             ],
+            'sparklines' => $sparklines,
             'dailySignups' => $dailySignups,
             'dailyWorkspaces' => $dailyWorkspaces,
             'planDistribution' => $planDistribution,
             'recent_users' => User::latest()->limit(5)->get(['id', 'name', 'email', 'created_at']),
+        ]);
+    }
+
+    /**
+     * Return compact quick stats for the admin sidebar widget.
+     */
+    public function quickStats(): JsonResponse
+    {
+        $plans = config('billing.plans', []);
+
+        return response()->json([
+            'total_users' => User::count(),
+            'total_workspaces' => Workspace::count(),
+            'mrr' => $this->calculateMrr($plans),
         ]);
     }
 

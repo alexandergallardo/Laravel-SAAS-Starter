@@ -15,8 +15,7 @@ beforeEach(function () {
 it('authenticated user can mark tour as complete', function () {
     actingAs($this->user)
         ->postJson('/tour/complete')
-        ->assertOk()
-        ->assertJson(['success' => true]);
+        ->assertRedirect();
 });
 
 it('sets tour_completed_at after POST', function () {

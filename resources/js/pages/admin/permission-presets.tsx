@@ -240,7 +240,7 @@ export default function PermissionPresets({
                                 </CardHeader>
                                 <CardContent>
                                     <div className="flex flex-wrap gap-1.5">
-                                        {preset.permissions.map((perm) => (
+                                        {Array.isArray(preset.permissions) && preset.permissions.map((perm) => (
                                             <Badge
                                                 key={perm}
                                                 variant="secondary"

@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslations } from '@/hooks/use-translations';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import WorkspaceLayout from '@/layouts/settings/workspace-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
@@ -86,7 +86,7 @@ export default function WorkspaceAnalytics({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('workspace_analytics.title', 'Workspace Analytics')} />
-            <SettingsLayout
+            <WorkspaceLayout
                 title={t('workspace_analytics.title', 'Workspace Analytics')}
                 description={t('workspace_analytics.description', 'Usage metrics, resource utilization, and growth trends for your workspace.')}
                 fullWidth
@@ -360,7 +360,7 @@ export default function WorkspaceAnalytics({
                         </CardContent>
                     </Card>
                 </div>
-            </SettingsLayout>
+            </WorkspaceLayout>
         </AppLayout>
     );
 }

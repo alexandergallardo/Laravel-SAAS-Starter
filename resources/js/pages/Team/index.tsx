@@ -1,3 +1,4 @@
+import { formatDistanceToNow } from 'date-fns';
 import InputError from '@/components/input-error';
 import { useTranslations } from '@/hooks/use-translations';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -38,7 +39,7 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import WorkspaceLayout from '@/layouts/settings/workspace-layout';
 import {
     type BreadcrumbItem,
     type TeamMember,
@@ -48,7 +49,9 @@ import {
     type WorkspaceRole,
 } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
+    AlertTriangle,
     Check,
     Clock,
     Copy,
@@ -57,13 +60,15 @@ import {
     Link2,
     Mail,
     MoreHorizontal,
+    Search,
     Settings,
     Shield,
     Trash2,
     UserPlus,
     Users,
+    X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const AVAILABLE_PERMISSION_GROUPS = [
     {
@@ -142,6 +147,52 @@ export default function TeamIndex({
     const { t } = useTranslations();
     const isAdmin = userRole === 'owner' || userRole === 'admin';
     const isOwner = userRole === 'owner';
+
+    // Bulk selection state
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+    const [bulkRole, setBulkRole] = useState<WorkspaceRole>('member');
+    const selectableMembers = members.filter((m) => m.role !== 'owner' && !m.is_current_user);
+
+    const toggleMember = (id: number) => {
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+        });
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedIds.size === selectableMembers.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(selectableMembers.map((m) => m.id)));
+        }
+    };
+
+    const clearSelection = () => setSelectedIds(new Set());
+
+    // Search & filter state
+    const [memberSearch, setMemberSearch] = useState('');
+    const [memberRoleFilter, setMemberRoleFilter] = useState<'all' | WorkspaceRole>('all');
+
+    const filteredMembers = members.filter((m) => {
+        const matchesSearch =
+            memberSearch === '' ||
+            m.name.toLowerCase().includes(memberSearch.toLowerCase()) ||
+            m.email.toLowerCase().includes(memberSearch.toLowerCase());
+        const matchesRole = memberRoleFilter === 'all' || m.role === memberRoleFilter;
+        return matchesSearch && matchesRole;
+    });
+
+    const executeBulkAction = (action: 'remove' | 'change_role') => {
+        if (selectedIds.size === 0) return;
+        if (action === 'remove' && !confirm(`Remove ${selectedIds.size} member${selectedIds.size !== 1 ? 's' : ''} from the workspace?`)) return;
+        router.post(
+            '/team/bulk-action',
+            { action, user_ids: Array.from(selectedIds), role: action === 'change_role' ? bulkRole : undefined },
+            { preserveScroll: true, onSuccess: () => clearSelection() },
+        );
+    };
 
     const [editPermissionsOpen, setEditPermissionsOpen] = useState(false);
     const [selectedMemberForPermissions, setSelectedMemberForPermissions] = useState<TeamMember | null>(null);
@@ -306,12 +357,28 @@ export default function TeamIndex({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('team.title', 'Team')} />
 
-            <SettingsLayout
+            <WorkspaceLayout
                 title={t('team.title', 'Team')}
                 description={t('team.description', 'Manage team members in {{workspace}}.', { workspace: workspace.name })}
                 fullWidth
             >
                 <div className="space-y-6">
+                    {!canInvite && (
+                        <Alert className="border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/30">
+                            <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                            <AlertTitle className="text-amber-800 dark:text-amber-300">
+                                Team member limit reached
+                            </AlertTitle>
+                            <AlertDescription className="flex items-center justify-between gap-4">
+                                <span className="text-amber-700 dark:text-amber-400">
+                                    {memberLimitMessage} Upgrade your plan to invite more members.
+                                </span>
+                                <Button size="sm" variant="outline" className="shrink-0 border-amber-400 text-amber-700 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-900/50" asChild>
+                                    <a href="/workspaces/billing">Upgrade Plan</a>
+                                </Button>
+                            </AlertDescription>
+                        </Alert>
+                    )}
                     <div className="flex items-center justify-end gap-2">
                         {isAdmin && (
                             <Button
@@ -429,22 +496,93 @@ export default function TeamIndex({
                     {/* Team Members */}
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Users className="h-5 w-5" />
-                                {t('team.team_members', 'Team Members')}
-                            </CardTitle>
-                            <CardDescription>
-                                {t('team.team_members_desc', 'All members currently in your workspace.')}
-                            </CardDescription>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    {isAdmin && selectableMembers.length > 0 && (
+                                        <Checkbox
+                                            checked={selectedIds.size === selectableMembers.length && selectableMembers.length > 0}
+                                            onCheckedChange={toggleSelectAll}
+                                            aria-label="Select all members"
+                                        />
+                                    )}
+                                    <div>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Users className="h-5 w-5" />
+                                            {t('team.team_members', 'Team Members')}
+                                            {(memberSearch || memberRoleFilter !== 'all') && (
+                                                <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-normal text-primary-foreground">
+                                                    {filteredMembers.length}
+                                                </span>
+                                            )}
+                                        </CardTitle>
+                                        <CardDescription>
+                                            {t('team.team_members_desc', 'All members currently in your workspace.')}
+                                        </CardDescription>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="mt-4 flex items-center gap-2">
+                                <div className="relative flex-1">
+                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder={t('team.search_members', 'Search by name or email…')}
+                                        value={memberSearch}
+                                        onChange={(e) => setMemberSearch(e.target.value)}
+                                        className="pl-8 pr-8"
+                                    />
+                                    {memberSearch && (
+                                        <button
+                                            onClick={() => setMemberSearch('')}
+                                            className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
+                                            aria-label="Clear search"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    )}
+                                </div>
+                                <Select value={memberRoleFilter} onValueChange={(v) => setMemberRoleFilter(v as 'all' | WorkspaceRole)}>
+                                    <SelectTrigger className="w-36">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">{t('team.all_roles', 'All Roles')}</SelectItem>
+                                        <SelectItem value="owner">{t('team.owner', 'Owner')}</SelectItem>
+                                        <SelectItem value="admin">{t('team.admin', 'Admin')}</SelectItem>
+                                        <SelectItem value="member">{t('team.member', 'Member')}</SelectItem>
+                                        <SelectItem value="viewer">{t('team.viewer', 'Viewer')}</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
-                                {members.map((member) => (
+                                {filteredMembers.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                                        <Search className="mb-2 h-8 w-8 text-muted-foreground" />
+                                        <p className="text-sm text-muted-foreground">
+                                            {t('team.no_members_found', 'No members match your search.')}
+                                        </p>
+                                        <button
+                                            onClick={() => { setMemberSearch(''); setMemberRoleFilter('all'); }}
+                                            className="mt-2 text-xs text-primary hover:underline"
+                                        >
+                                            {t('team.clear_filters', 'Clear filters')}
+                                        </button>
+                                    </div>
+                                ) : null}
+                                {filteredMembers.map((member) => (
                                     <div
                                         key={member.id}
-                                        className="flex items-center justify-between rounded-lg border p-4"
+                                        className={`flex items-center justify-between rounded-lg border p-4 transition-colors ${selectedIds.has(member.id) ? 'bg-muted/50' : ''}`}
                                     >
                                         <div className="flex items-center gap-4">
+                                            {isAdmin && member.role !== 'owner' && !member.is_current_user && (
+                                                <Checkbox
+                                                    checked={selectedIds.has(member.id)}
+                                                    onCheckedChange={() => toggleMember(member.id)}
+                                                    aria-label={`Select ${member.name}`}
+                                                />
+                                            )}
                                             <Avatar>
                                                 <AvatarFallback>
                                                     {getInitials(member.name)}
@@ -467,6 +605,12 @@ export default function TeamIndex({
                                                 {member.timezone && (
                                                     <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                                                         <Clock className="h-3 w-3" /> {member.timezone}
+                                                    </p>
+                                                )}
+                                                {member.last_seen_at && (
+                                                    <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                                                        <Clock className="h-3 w-3" />
+                                                        Active {formatDistanceToNow(new Date(member.last_seen_at), { addSuffix: true })}
                                                     </p>
                                                 )}
                                                 {member.bio && (
@@ -577,6 +721,38 @@ export default function TeamIndex({
                                     </div>
                                 ))}
                             </div>
+
+                            {/* Bulk action bar */}
+                            {isAdmin && selectedIds.size > 0 && (
+                                <div className="bg-background mt-4 flex flex-wrap items-center gap-3 rounded-lg border p-3">
+                                    <span className="text-muted-foreground text-sm font-medium">
+                                        {selectedIds.size} {selectedIds.size !== 1 ? t('team.members_selected', 'members selected') : t('team.member_selected', 'member selected')}
+                                    </span>
+                                    <div className="flex flex-1 flex-wrap items-center gap-2">
+                                        <div className="flex items-center gap-2">
+                                            <Select value={bulkRole} onValueChange={(v) => setBulkRole(v as WorkspaceRole)}>
+                                                <SelectTrigger className="h-8 w-32">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="admin">{t('team.role_admin', 'Admin')}</SelectItem>
+                                                    <SelectItem value="member">{t('team.role_member', 'Member')}</SelectItem>
+                                                    <SelectItem value="viewer">{t('team.role_viewer', 'Viewer')}</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <Button size="sm" variant="outline" onClick={() => executeBulkAction('change_role')}>
+                                                {t('team.change_role', 'Change Role')}
+                                            </Button>
+                                        </div>
+                                        <Button size="sm" variant="destructive" onClick={() => executeBulkAction('remove')}>
+                                            {t('team.remove_selected', 'Remove Selected')}
+                                        </Button>
+                                    </div>
+                                    <Button size="sm" variant="ghost" onClick={clearSelection}>
+                                        {t('team.clear_selection', 'Clear')}
+                                    </Button>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -756,49 +932,51 @@ export default function TeamIndex({
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-4">
-                                    {pendingInvitations.map((invitation) => (
-                                        <div
-                                            key={invitation.id}
-                                            className="flex items-center justify-between rounded-lg border border-dashed p-4"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <Avatar>
-                                                    <AvatarFallback>
-                                                        <Mail className="h-4 w-4" />
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div>
-                                                    <p className="font-medium">
-                                                        {invitation.email}
-                                                    </p>
-                                                    <p className="flex items-center gap-1 text-sm text-muted-foreground">
-                                                        <Clock className="h-3 w-3" />
-                                                        {t('team.expires', 'Expires')}{' '}
-                                                        {new Date(
-                                                            invitation.expires_at,
-                                                        ).toLocaleDateString()}
-                                                    </p>
+                                    {pendingInvitations.map((invitation) => {
+                                        const isExpired = new Date(invitation.expires_at) < new Date();
+                                        return (
+                                            <div
+                                                key={invitation.id}
+                                                className={`flex items-center justify-between rounded-lg border border-dashed p-4 ${isExpired ? 'opacity-60' : ''}`}
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <Avatar>
+                                                        <AvatarFallback>
+                                                            <Mail className="h-4 w-4" />
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div>
+                                                        <p className="font-medium">{invitation.email}</p>
+                                                        <p className="text-muted-foreground flex items-center gap-1 text-sm">
+                                                            <Clock className="h-3 w-3" />
+                                                            {isExpired ? t('team.expired_on', 'Expired') : t('team.expires', 'Expires')}{' '}
+                                                            {new Date(invitation.expires_at).toLocaleDateString()}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    {isExpired && (
+                                                        <Badge variant="destructive" className="text-xs">
+                                                            {t('team.expired', 'Expired')}
+                                                        </Badge>
+                                                    )}
+                                                    <Badge variant="outline">
+                                                        {invitation.role.charAt(0).toUpperCase() + invitation.role.slice(1)}
+                                                    </Badge>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => router.post(`/team/invitations/${invitation.id}/resend`, {}, { preserveScroll: true })}
+                                                    >
+                                                        {t('team.resend', 'Resend')}
+                                                    </Button>
+                                                    <Button variant="ghost" size="icon" onClick={() => cancelInvitation(invitation)}>
+                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                    </Button>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-4">
-                                                <Badge variant="outline">
-                                                    {invitation.role
-                                                        .charAt(0)
-                                                        .toUpperCase() +
-                                                        invitation.role.slice(1)}
-                                                </Badge>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() =>
-                                                        cancelInvitation(invitation)
-                                                    }
-                                                >
-                                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </CardContent>
                         </Card>
@@ -895,7 +1073,7 @@ export default function TeamIndex({
                         </DialogContent>
                     </Dialog>
                 </div>
-            </SettingsLayout>
+            </WorkspaceLayout>
         </AppLayout>
     );
 }

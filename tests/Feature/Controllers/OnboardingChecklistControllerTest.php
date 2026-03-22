@@ -23,7 +23,7 @@ it('returns the onboarding checklist as json', function () {
 it('can dismiss the onboarding checklist', function () {
     $this->actingAs($this->user)
         ->postJson(route('onboarding-checklist.dismiss'))
-        ->assertOk();
+        ->assertRedirect();
 });
 
 it('denies access to unauthenticated users', function () {

@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslations } from '@/hooks/use-translations';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import WorkspaceLayout from '@/layouts/settings/workspace-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
@@ -82,7 +82,7 @@ export default function ActivityReport({ members, summary, dailyActivity }: Acti
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('member_activity.title', 'Member Activity Report')} />
-            <SettingsLayout
+            <WorkspaceLayout
                 title={t('member_activity.title', 'Member Activity Report')}
                 description={t('member_activity.description', 'View member engagement, login frequency, and activity metrics for your workspace.')}
                 fullWidth
@@ -277,7 +277,7 @@ export default function ActivityReport({ members, summary, dailyActivity }: Acti
                         </CardContent>
                     </Card>
                 </div>
-            </SettingsLayout>
+            </WorkspaceLayout>
         </AppLayout>
     );
 }

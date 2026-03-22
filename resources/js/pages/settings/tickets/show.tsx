@@ -1,4 +1,5 @@
-import Layout from '@/layouts/settings/layout';
+import AppLayout from '@/layouts/app-layout';
+import ProfileLayout from '@/layouts/settings/profile-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
@@ -86,8 +87,10 @@ export default function TicketShow({ ticket }: ShowProps) {
     };
 
     return (
-        <Layout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={ticket.subject} />
+
+            <ProfileLayout>
 
             <div className="space-y-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-4">
@@ -161,6 +164,7 @@ export default function TicketShow({ ticket }: ShowProps) {
                     </div>
                 )}
             </div>
-        </Layout>
+            </ProfileLayout>
+        </AppLayout>
     );
 }

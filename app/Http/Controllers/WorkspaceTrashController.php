@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Workspace;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -37,7 +37,7 @@ class WorkspaceTrashController extends Controller
     /**
      * Restore a soft-deleted workspace.
      */
-    public function restore(Request $request, int $workspaceId): JsonResponse
+    public function restore(Request $request, int $workspaceId): RedirectResponse
     {
         $workspace = Workspace::onlyTrashed()->findOrFail($workspaceId);
 
@@ -48,15 +48,13 @@ class WorkspaceTrashController extends Controller
         // Set it as the user's current workspace
         $request->user()->switchWorkspace($workspace);
 
-        return response()->json([
-            'message' => 'Workspace restored successfully.',
-        ]);
+        return back()->with('success', 'Workspace restored successfully.');
     }
 
     /**
      * Permanently delete a soft-deleted workspace.
      */
-    public function forceDelete(Request $request, int $workspaceId): JsonResponse
+    public function forceDelete(Request $request, int $workspaceId): RedirectResponse
     {
         $workspace = Workspace::onlyTrashed()->findOrFail($workspaceId);
 
@@ -67,8 +65,6 @@ class WorkspaceTrashController extends Controller
 
         $workspace->forceDelete();
 
-        return response()->json([
-            'message' => 'Workspace permanently deleted.',
-        ]);
+        return back()->with('success', 'Workspace permanently deleted.');
     }
 }

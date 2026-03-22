@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class OnboardingChecklistController extends Controller
@@ -61,12 +62,12 @@ class OnboardingChecklistController extends Controller
     /**
      * Dismiss the onboarding checklist permanently.
      */
-    public function dismiss(Request $request): JsonResponse
+    public function dismiss(Request $request): RedirectResponse
     {
         $request->user()->forceFill([
             'onboarding_checklist_dismissed_at' => now(),
         ])->save();
 
-        return response()->json(['success' => true]);
+        return back();
     }
 }

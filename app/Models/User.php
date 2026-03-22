@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -58,6 +59,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'tour_completed_at',
         'changelog_read_at',
         'password_updated_at',
+        'last_seen_at',
     ];
 
     /**
@@ -99,6 +101,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'tour_completed_at' => 'datetime',
             'changelog_read_at' => 'datetime',
             'password_updated_at' => 'datetime',
+            'last_seen_at' => 'datetime',
         ];
     }
 
@@ -348,6 +351,80 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get the options for recording activity.
      */
+    /**
+     * Calculate the user's current consecutive daily login streak.
+     */
+    public function currentLoginStreak(): int
+    {
+        $dates = $this->loginActivities()
+            ->where('is_successful', true)
+            ->orderByDesc('login_at')
+            ->pluck('login_at')
+            ->map(fn ($date) => $date->toDateString())
+            ->unique()
+            ->values();
+
+        if ($dates->isEmpty()) {
+            return 0;
+        }
+
+        $today = now()->toDateString();
+        $yesterday = now()->subDay()->toDateString();
+
+        // Streak must start today or yesterday
+        if ($dates->first() !== $today && $dates->first() !== $yesterday) {
+            return 0;
+        }
+
+        $streak = 1;
+        for ($i = 1; $i < $dates->count(); $i++) {
+            $expected = now()->subDays($i + ($dates->first() === $yesterday ? 1 : 0))->toDateString();
+            if ($dates->get($i) === $expected) {
+                $streak++;
+            } else {
+                break;
+            }
+        }
+
+        return $streak;
+    }
+
+    /**
+     * Calculate the user's longest consecutive daily login streak.
+     */
+    public function longestLoginStreak(): int
+    {
+        $dates = $this->loginActivities()
+            ->where('is_successful', true)
+            ->orderByDesc('login_at')
+            ->pluck('login_at')
+            ->map(fn ($date) => $date->toDateString())
+            ->unique()
+            ->sort()
+            ->values();
+
+        if ($dates->isEmpty()) {
+            return 0;
+        }
+
+        $longest = 1;
+        $current = 1;
+
+        for ($i = 1; $i < $dates->count(); $i++) {
+            $prev = Carbon::parse($dates->get($i - 1));
+            $curr = Carbon::parse($dates->get($i));
+
+            if ($prev->addDay()->toDateString() === $curr->toDateString()) {
+                $current++;
+                $longest = max($longest, $current);
+            } else {
+                $current = 1;
+            }
+        }
+
+        return $longest;
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

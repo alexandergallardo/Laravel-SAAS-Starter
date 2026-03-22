@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import ProfileLayout from '@/layouts/settings/profile-layout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -62,7 +62,7 @@ export default function ConnectedAccounts({ providers, hasPassword }: Props) {
     return (
         <AppLayout breadcrumbs={[{ title: 'Connected Accounts', href: '/settings/connected-accounts' }]}>
             <Head title="Connected Accounts" />
-            <SettingsLayout title="Connected Accounts" description="Manage your linked social login providers.">
+            <ProfileLayout title="Connected Accounts" description="Manage your linked social login providers.">
                 <div className="space-y-4">
                     {flash?.success && (
                         <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-400">
@@ -131,7 +131,7 @@ export default function ConnectedAccounts({ providers, hasPassword }: Props) {
                         </p>
                     )}
                 </div>
-            </SettingsLayout>
+            </ProfileLayout>
         </AppLayout>
     );
 }

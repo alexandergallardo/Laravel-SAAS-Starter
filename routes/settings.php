@@ -1,12 +1,15 @@
 <?php
 
 use App\Http\Controllers\Settings\ApiTokenController;
+use App\Http\Controllers\Settings\ConnectedAccountController;
 use App\Http\Controllers\Settings\LoginActivityController;
 use App\Http\Controllers\Settings\NotificationPreferenceController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
+use App\Http\Controllers\Settings\SecuritySummaryController;
 use App\Http\Controllers\Settings\SessionController;
+use App\Http\Controllers\Settings\SessionSummaryController;
 use App\Http\Controllers\Settings\TicketController;
 use App\Http\Controllers\Settings\TwoFactorAuthenticationController;
 use App\Http\Controllers\Settings\UserAvatarController;
@@ -22,18 +25,29 @@ Route::middleware('auth')->group(function () {
     Route::delete('settings/profile/avatar', [UserAvatarController::class, 'destroy'])->name('profile.avatar.destroy');
     Route::delete('settings/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::get('settings/password', [PasswordController::class, 'edit'])->name('user-password.edit');
-
+    // Password management (API endpoint for the authentication page)
     Route::put('settings/password', [PasswordController::class, 'update'])
         ->middleware('throttle:6,1')
         ->name('user-password.update');
 
-    Route::get('settings/appearance', function () {
-        return Inertia::render('settings/appearance');
-    })->name('appearance.edit');
+    // Appearance - merged into General/Profile page, redirect to profile
+    Route::redirect('settings/appearance', '/settings/profile')->name('appearance.edit');
 
+    Route::get('settings/privacy', function () {
+        return Inertia::render('settings/privacy');
+    })->name('privacy.show');
+
+    // Two-Factor Auth routes (handled by Fortify, but we need the GET for the old page redirect)
     Route::get('settings/two-factor', [TwoFactorAuthenticationController::class, 'show'])
         ->name('two-factor.show');
+
+    // Combined Authentication page (Password + 2FA)
+    Route::get('settings/security/authentication', [SecurityController::class, 'authentication'])
+        ->name('security.authentication');
+
+    // Redirect old URLs to new structure
+    Route::redirect('settings/password', '/settings/security/authentication');
+    Route::redirect('settings/two-factor', '/settings/security/authentication');
 
     // API Tokens
     Route::get('settings/api-tokens', [ApiTokenController::class, 'index'])->name('api-tokens.index');
@@ -65,4 +79,14 @@ Route::middleware('auth')->group(function () {
         Route::get('settings/tickets/{ticket}', 'show')->name('settings.tickets.show');
         Route::post('settings/tickets/{ticket}/replies', 'storeReply')->name('settings.tickets.reply.store');
     });
+
+    // Connected Accounts
+    Route::get('settings/connected-accounts', [ConnectedAccountController::class, 'index'])->name('connected-accounts.index');
+    Route::delete('settings/connected-accounts/{connectedAccount}', [ConnectedAccountController::class, 'destroy'])->name('connected-accounts.destroy');
+
+    // Security Summary
+    Route::get('settings/security-summary', SecuritySummaryController::class)->name('security-summary.index');
+
+    // Session Summary
+    Route::get('settings/session-summary', SessionSummaryController::class)->name('session-summary.index');
 });

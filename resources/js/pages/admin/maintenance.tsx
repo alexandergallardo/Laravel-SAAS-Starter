@@ -71,6 +71,13 @@ export default function AdminMaintenance({ maintenance, isDown }: Props) {
                             </p>
                         </div>
 
+                        <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-950/30 dark:text-blue-200">
+                            <Shield className="h-5 w-5 shrink-0" />
+                            <p>
+                                <strong>Superadmins:</strong> You can always access the site during maintenance mode. No bypass secret needed.
+                            </p>
+                        </div>
+
                         {maintenance.secret && (
                             <div className="flex items-center gap-3 rounded-lg border bg-muted/50 p-4">
                                 <div className="flex-1">

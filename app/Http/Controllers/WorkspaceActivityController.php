@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Activitylog\Models\Activity;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class WorkspaceActivityController extends Controller
 {
@@ -101,5 +102,47 @@ class WorkspaceActivityController extends Controller
             'eventTypes' => $eventTypes,
             'currentFilter' => $eventFilter ?? 'all',
         ]);
+    }
+
+    /**
+     * Export workspace activity log as CSV.
+     */
+    public function export(Request $request, Workspace $workspace): StreamedResponse
+    {
+        Gate::authorize('viewActivityLogging', $workspace);
+
+        $activities = Activity::where(function ($q) use ($workspace) {
+            $q->where(function ($sub) use ($workspace) {
+                $sub->where('subject_type', Workspace::class)
+                    ->where('subject_id', $workspace->id);
+            })->orWhere(function ($sub) use ($workspace) {
+                $sub->where('properties->workspace_id', $workspace->id);
+            })->orWhere(function ($sub) use ($workspace) {
+                $sub->where('subject_type', User::class)
+                    ->whereIn('subject_id', $workspace->users()->pluck('users.id'));
+            });
+        })
+            ->with('causer:id,name,email')
+            ->latest()
+            ->get();
+
+        $filename = 'workspace-activity-'.now()->format('Y-m-d').'.csv';
+
+        return response()->streamDownload(function () use ($activities): void {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Date', 'Event', 'Causer', 'Subject Type', 'Description']);
+
+            foreach ($activities as $activity) {
+                fputcsv($handle, [
+                    $activity->created_at?->toDateTimeString(),
+                    $activity->event ?? '',
+                    $activity->causer?->name ?? 'System',
+                    class_basename($activity->subject_type ?? ''),
+                    $activity->description ?? '',
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv']);
     }
 }

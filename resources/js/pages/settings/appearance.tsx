@@ -5,7 +5,7 @@ import { useTranslations } from '@/hooks/use-translations';
 import { type BreadcrumbItem } from '@/types';
 
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import ProfileLayout from '@/layouts/settings/profile-layout';
 import { edit as editAppearance } from '@/routes/appearance';
 
 export default function Appearance() {
@@ -22,7 +22,7 @@ export default function Appearance() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('settings.appearance.title', 'Appearance settings')} />
 
-            <SettingsLayout
+            <ProfileLayout
                 title={t('settings.appearance.title', 'Appearance settings')}
                 description={t('settings.appearance.description', "Update your account's appearance settings")}
                 fullWidth
@@ -30,7 +30,7 @@ export default function Appearance() {
                 <div className="space-y-6">
                     <AppearanceTabs />
                 </div>
-            </SettingsLayout>
+            </ProfileLayout>
         </AppLayout>
     );
 }

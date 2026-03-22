@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslations } from '@/hooks/use-translations';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import WorkspaceLayout from '@/layouts/settings/workspace-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { Activity, AlertTriangle, Clock, List, ShieldAlert, Zap } from 'lucide-react';
@@ -86,7 +86,7 @@ export default function ApiUsage({ overview, dailyVolume, perKeyUsage, statusDis
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('api_usage.title', 'API Usage')} />
-            <SettingsLayout
+            <WorkspaceLayout
                 title={t('api_usage.title', 'API Usage')}
                 description={t('api_usage.description', 'Monitor API request volume, response times, and per-key usage statistics.')}
                 fullWidth
@@ -358,7 +358,7 @@ export default function ApiUsage({ overview, dailyVolume, perKeyUsage, statusDis
                         </CardContent>
                     </Card>
                 </div>
-            </SettingsLayout>
+            </WorkspaceLayout>
         </AppLayout>
     );
 }

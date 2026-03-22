@@ -62,6 +62,8 @@ class Workspace extends Model
         'require_two_factor',
         'allowed_ips',
         'allowed_email_domains',
+        'plan_override',
+        'billing_email',
         'suspended_at',
         'suspension_reason',
     ];
@@ -390,6 +392,17 @@ class Workspace extends Model
     {
         if ($this->resolvedPlan !== null) {
             return $this->resolvedPlan;
+        }
+
+        if ($this->plan_override) {
+            $plans = config('billing.plans');
+            foreach ($plans as $planKey => $plan) {
+                if (strtolower($plan['name']) === strtolower($this->plan_override) || $planKey === strtolower($this->plan_override)) {
+                    return $this->resolvedPlan = ['name' => $plan['name'], 'key' => $planKey];
+                }
+            }
+
+            return $this->resolvedPlan = ['name' => $this->plan_override, 'key' => strtolower($this->plan_override)];
         }
 
         if ($this->subscribed('default')) {

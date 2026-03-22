@@ -7,6 +7,8 @@ import { Form, Head, Link, router, usePage } from '@inertiajs/react';
 import DeleteUser from '@/components/delete-user';
 import ExportData from '@/components/export-data';
 import { LanguageSwitcher } from '@/components/language-switcher';
+import AppearanceTabs from '@/components/appearance-tabs';
+import HeadingSmall from '@/components/heading-small';
 import InputError from '@/components/input-error';
 import { useTranslations } from '@/hooks/use-translations';
 import { Button } from '@/components/ui/button';
@@ -20,12 +22,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { type ChangeEvent } from 'react';
 import AvatarUpload from '@/components/avatar-upload';
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import ProfileLayout from '@/layouts/settings/profile-layout';
 import { edit } from '@/routes/profile';
 import { update as updateAvatar, destroy as destroyAvatar } from '@/routes/profile/avatar';
 
@@ -51,36 +52,14 @@ export default function Profile({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('settings.profile.title', 'Profile information')} />
 
-            <SettingsLayout
+            <ProfileLayout
                 title={t('settings.profile.title', 'Profile information')}
                 description={t('settings.profile.description', 'Update your name and email address')}
                 fullWidth
             >
                 <div className="space-y-6">
 
-                    {/* Profile Completeness */}
-                    {(() => {
-                        const completeness = auth.user?.profile_completeness;
-                        if (!completeness || completeness.score >= 100) return null;
-                        return (
-                            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30">
-                                <div className="mb-2 flex items-center justify-between">
-                                    <p className="text-sm font-medium text-amber-900 dark:text-amber-300">
-                                        Profile {completeness.score}% complete
-                                    </p>
-                                    <span className="text-xs text-amber-700 dark:text-amber-400">
-                                        {completeness.score}/100
-                                    </span>
-                                </div>
-                                <Progress value={completeness.score} className="h-1.5 bg-amber-200 dark:bg-amber-900" />
-                                {completeness.missing.length > 0 && (
-                                    <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
-                                        Still missing: {completeness.missing.join(', ')}
-                                    </p>
-                                )}
-                            </div>
-                        );
-                    })()}
+
 
                     <Form
                         {...ProfileController.update.form()}
@@ -280,12 +259,23 @@ export default function Profile({
 
                     <Separator />
 
+                    {/* Appearance / Theme */}
+                    <div className="space-y-4">
+                        <HeadingSmall
+                            title={t('settings.appearance.title', 'Appearance')}
+                            description={t('settings.appearance.description', "Choose your preferred theme for the application.")}
+                        />
+                        <AppearanceTabs />
+                    </div>
+
+                    <Separator />
+
                     <LanguageSwitcher currentLocale={locale || auth.user?.locale || 'en'} />
                 </div>
 
                 <ExportData />
                 <DeleteUser />
-            </SettingsLayout>
+            </ProfileLayout>
         </AppLayout>
     );
 }
