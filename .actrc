@@ -1,3 +1,2 @@
--P ubuntu-latest=catthehacker/ubuntu:act-latest
---container-architecture linux/amd64
---env PATH=/opt/acttoolcache/node/24.14.0/x64/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+-P ubuntu-latest=act-ubuntu-22.04:amd64
+--pull=false
