@@ -13,7 +13,7 @@ This repository contains comprehensive documentation for the architecture, featu
 - [Seat-Based Billing](./features/seat-billing.md)
 - [Admin Panel](./features/admin-panel.md)
 - [Audit Logs](./features/audit-logs.md)
-- [Announcements](./features/announcements.md)
+- [Global Announcements](./features/global-announcements.md)
 - [Feature Flags](./features/feature-flags.md)
 - [Webhooks & Delivery Logs](./features/webhooks.md)
 - [Email Templates](./features/email-templates.md)
@@ -72,6 +72,19 @@ This repository contains comprehensive documentation for the architecture, featu
 - [User Last Seen Timestamp](./features/user-last-seen.md)
 - [User Login Methods Summary](./features/security-summary.md)
 - [Session Activity Summary](./features/session-summary.md)
+- [Activity Reactions](./features/activity-reactions.md)
+- [Billing History](./features/billing-history.md)
+- [Cancellation Flow](./features/cancellation-flow.md)
+- [Custom Fields](./features/custom-fields.md)
+- [Plan Comparison](./features/plan-comparison.md)
+- [Public Status Page](./features/public-status-page.md)
+- [User API Keys](./features/user-api-keys.md)
+- [Workspace Announcements](./features/workspace-announcements.md)
+- [Workspace Comments](./features/workspace-comments.md)
+- [Workspace Tags](./features/workspace-tags.md)
+- [Workspace Templates](./features/workspace-templates.md)
+- [Connected Accounts](./features/connected-accounts.md)
+- [Workspace Retention Insights](./features/workspace-retention-insights.md)
 
 ## Development Directives
 

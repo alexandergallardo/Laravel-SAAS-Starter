@@ -94,5 +94,5 @@ Potential improvements:
 ## Related Features
 
 - [Billing Management](./billing.md)
-- [Plan Selection](./plan-selection.md)
-- [Subscription Management](./subscription-management.md)
+- [Billing History](./billing-history.md)
+- [Cancellation Flow](./cancellation-flow.md)

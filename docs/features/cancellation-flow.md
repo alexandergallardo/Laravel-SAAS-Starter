@@ -131,4 +131,3 @@ Potential improvements:
 
 - [Billing Management](./billing.md)
 - [Plan Comparison](./plan-comparison.md)
-- [Subscription Resume](./subscription-resume.md)

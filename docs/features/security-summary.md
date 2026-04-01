@@ -171,6 +171,6 @@ The controller:
 ## Related Features
 
 - [Connected Social Accounts](./connected-accounts.md) - Manage OAuth connections
-- [Two-Factor Authentication](./two-factor-authentication.md) - Enable/disable 2FA
-- [Password Management](./password-management.md) - Change password
+- [Authentication & Access Control](./authentication.md) - Enable/disable 2FA, change password
+- [Password Change History](./password-change-history.md) - Audit password changes
 - [Login Activity](./login-activity.md) - View login history
