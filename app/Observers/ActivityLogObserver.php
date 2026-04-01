@@ -27,7 +27,7 @@ class ActivityLogObserver
             $workspace = Workspace::find($activity->subject->workspace_id);
         }
 
-        if ($workspace) {
+        if ($workspace && $workspace->exists) {
             broadcast(new WorkspaceActivityWasLogged(
                 $workspace,
                 $activity->description,
