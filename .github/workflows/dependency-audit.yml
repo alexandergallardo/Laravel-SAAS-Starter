@@ -21,27 +21,30 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node
         if: ${{ !env.ACT }}
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Install Dependencies
         run: |
           composer install --no-interaction --prefer-dist
-          npm ci
+          pnpm install --frozen-lockfile
 
       - name: Audit Composer Dependencies
         run: composer audit
 
       - name: Audit NPM Dependencies
-        run: npm audit --audit-level=high
+        run: pnpm audit --audit-level=high
