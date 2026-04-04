@@ -1,3 +1,5 @@
+import { OnboardingChecklist } from '@/components/onboarding-checklist';
+import { ProductTour } from '@/components/product-tour';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -7,9 +9,10 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { WorkspaceActivityFeed } from '@/components/workspace-activity-feed';
+import { WorkspaceRetentionWidget } from '@/components/workspace-retention-widget';
 import { useTranslations } from '@/hooks/use-translations';
 import AppLayout from '@/layouts/app-layout';
-import { OnboardingChecklist } from '@/components/onboarding-checklist';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import {
@@ -24,7 +27,9 @@ import {
     Zap,
 } from 'lucide-react';
 
-const getBreadcrumbs = (t: (key: string, fallback: string) => string): BreadcrumbItem[] => [
+const getBreadcrumbs = (
+    t: (key: string, fallback: string) => string,
+): BreadcrumbItem[] => [
     {
         title: t('dashboard.title', 'Dashboard'),
         href: '/dashboard',
@@ -42,31 +47,47 @@ export default function Dashboard() {
     const quickActions = [
         {
             title: t('dashboard.invite_team_member', 'Invite Team Member'),
-            description: t('dashboard.invite_team_member_desc', 'Add a colleague to your workspace'),
+            description: t(
+                'dashboard.invite_team_member_desc',
+                'Add a colleague to your workspace',
+            ),
             icon: Users,
             href: '/team',
             color: 'text-blue-500',
+            id: 'nav-team',
         },
         {
             title: t('dashboard.manage_billing_title', 'Manage Billing'),
-            description: t('dashboard.manage_billing_desc', 'View plans and invoices'),
+            description: t(
+                'dashboard.manage_billing_desc',
+                'View plans and invoices',
+            ),
             icon: CreditCard,
             href: '/billing',
             color: 'text-green-500',
+            id: 'nav-billing',
         },
         {
             title: t('dashboard.workspace_settings', 'Workspace Settings'),
-            description: t('dashboard.workspace_settings_desc', 'Configure your workspace'),
+            description: t(
+                'dashboard.workspace_settings_desc',
+                'Configure your workspace',
+            ),
             icon: Settings,
             href: '/workspaces/settings',
             color: 'text-purple-500',
+            id: 'nav-settings',
         },
         {
             title: t('dashboard.create_workspace', 'Create Workspace'),
-            description: t('dashboard.create_workspace_desc', 'Start a new project'),
+            description: t(
+                'dashboard.create_workspace_desc',
+                'Start a new project',
+            ),
             icon: Plus,
             href: '/workspaces/create',
             color: 'text-orange-500',
+            id: undefined,
         },
     ];
 
@@ -79,15 +100,24 @@ export default function Dashboard() {
                 <div className="flex h-full flex-1 flex-col items-center justify-center gap-4 p-4">
                     <Building2 className="h-16 w-16 text-muted-foreground" />
                     <h2 className="text-2xl font-semibold">
-                        {t('dashboard.no_workspace_selected', 'No Workspace Selected')}
+                        {t(
+                            'dashboard.no_workspace_selected',
+                            'No Workspace Selected',
+                        )}
                     </h2>
                     <p className="text-muted-foreground">
-                        {t('dashboard.create_or_select', 'Create or select a workspace to get started.')}
+                        {t(
+                            'dashboard.create_or_select',
+                            'Create or select a workspace to get started.',
+                        )}
                     </p>
                     <Button asChild>
                         <Link href="/workspaces/create">
                             <Plus className="mr-2 h-4 w-4" />
-                            {t('dashboard.create_workspace', 'Create Workspace')}
+                            {t(
+                                'dashboard.create_workspace',
+                                'Create Workspace',
+                            )}
                         </Link>
                     </Button>
                 </div>
@@ -99,25 +129,42 @@ export default function Dashboard() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('dashboard.title', 'Dashboard')} />
 
-            <div className="flex h-full flex-1 flex-col gap-6 p-4 lg:p-6">
+            <div
+                id="dashboard-main"
+                className="flex h-full flex-1 flex-col gap-6 p-4 lg:p-6"
+            >
                 {/* Onboarding Checklist */}
                 <OnboardingChecklist />
+
+                {/* Product Tour */}
+                {!auth.user?.tour_completed_at && <ProductTour />}
 
                 {/* Welcome Section */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                            {t('dashboard.welcome_back', 'Welcome back, {{name}}!', { name: auth.user?.name?.split(' ')[0] || '' })}
+                            {t(
+                                'dashboard.welcome_back',
+                                'Welcome back, {{name}}!',
+                                { name: auth.user?.name?.split(' ')[0] || '' },
+                            )}
                         </h1>
                         <p className="text-muted-foreground">
-                            {t('dashboard.whats_happening', "Here's what's happening in {{workspace}}.", { workspace: workspace.name })}
+                            {t(
+                                'dashboard.whats_happening',
+                                "Here's what's happening in {{workspace}}.",
+                                { workspace: workspace.name },
+                            )}
                         </p>
                     </div>
                     {workspace.plan === 'Free' && (
                         <Button asChild>
                             <Link href="/billing/plans">
                                 <Sparkles className="mr-2 h-4 w-4" />
-                                {t('dashboard.upgrade_to_pro', 'Upgrade to Pro')}
+                                {t(
+                                    'dashboard.upgrade_to_pro',
+                                    'Upgrade to Pro',
+                                )}
                             </Link>
                         </Button>
                     )}
@@ -129,7 +176,10 @@ export default function Dashboard() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
-                                {t('dashboard.current_workspace', 'Current Workspace')}
+                                {t(
+                                    'dashboard.current_workspace',
+                                    'Current Workspace',
+                                )}
                             </CardTitle>
                             <Building2 className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
@@ -152,7 +202,10 @@ export default function Dashboard() {
                             </div>
                             {workspace.personal_workspace && (
                                 <p className="mt-1 text-xs text-muted-foreground">
-                                    {t('dashboard.personal_workspace', 'Personal workspace')}
+                                    {t(
+                                        'dashboard.personal_workspace',
+                                        'Personal workspace',
+                                    )}
                                 </p>
                             )}
                         </CardContent>
@@ -172,14 +225,19 @@ export default function Dashboard() {
                                     {workspace.plan}
                                 </span>
                                 {workspace.plan !== 'Free' && (
-                                    <Badge variant="secondary">{t('dashboard.active', 'Active')}</Badge>
+                                    <Badge variant="secondary">
+                                        {t('dashboard.active', 'Active')}
+                                    </Badge>
                                 )}
                             </div>
                             <Link
                                 href="/billing"
                                 className="mt-1 flex items-center text-xs text-muted-foreground hover:text-primary"
                             >
-                                {t('dashboard.manage_billing', 'Manage billing')}
+                                {t(
+                                    'dashboard.manage_billing',
+                                    'Manage billing',
+                                )}
                                 <ArrowRight className="ml-1 h-3 w-3" />
                             </Link>
                         </CardContent>
@@ -226,22 +284,42 @@ export default function Dashboard() {
                             </div>
                             <p className="mt-1 text-xs text-muted-foreground">
                                 {workspace.role === 'owner' &&
-                                    t('dashboard.full_workspace_control', 'Full workspace control')}
+                                    t(
+                                        'dashboard.full_workspace_control',
+                                        'Full workspace control',
+                                    )}
                                 {workspace.role === 'admin' &&
-                                    t('dashboard.can_manage_team_settings', 'Can manage team & settings')}
+                                    t(
+                                        'dashboard.can_manage_team_settings',
+                                        'Can manage team & settings',
+                                    )}
                                 {workspace.role === 'member' &&
-                                    t('dashboard.standard_access', 'Standard access')}
+                                    t(
+                                        'dashboard.standard_access',
+                                        'Standard access',
+                                    )}
                             </p>
                         </CardContent>
                     </Card>
                 </div>
 
+                {/* Activity Feed & Retention */}
+                <div className="grid gap-4 lg:grid-cols-2">
+                    <WorkspaceActivityFeed />
+                    <WorkspaceRetentionWidget />
+                </div>
+
                 {/* Quick Actions */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>{t('dashboard.quick_actions', 'Quick Actions')}</CardTitle>
+                        <CardTitle>
+                            {t('dashboard.quick_actions', 'Quick Actions')}
+                        </CardTitle>
                         <CardDescription>
-                            {t('dashboard.quick_actions_description', 'Common tasks to help you get things done faster.')}
+                            {t(
+                                'dashboard.quick_actions_description',
+                                'Common tasks to help you get things done faster.',
+                            )}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -250,6 +328,7 @@ export default function Dashboard() {
                                 <Link
                                     key={action.title}
                                     href={action.href}
+                                    id={action.id}
                                     className="group flex items-start gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50"
                                 >
                                     <div
@@ -282,10 +361,16 @@ export default function Dashboard() {
                                 </div>
                                 <div>
                                     <h3 className="font-semibold">
-                                        {t('dashboard.upgrade_to_pro', 'Upgrade to Pro')}
+                                        {t(
+                                            'dashboard.upgrade_to_pro',
+                                            'Upgrade to Pro',
+                                        )}
                                     </h3>
                                     <p className="text-sm text-muted-foreground">
-                                        {t('dashboard.unlock_features', 'Unlock more workspaces, team members, and advanced features.')}
+                                        {t(
+                                            'dashboard.unlock_features',
+                                            'Unlock more workspaces, team members, and advanced features.',
+                                        )}
                                     </p>
                                 </div>
                             </div>

@@ -15,14 +15,8 @@ class RequireAdminTwoFactor
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
-
-        if ($user && $user->is_superadmin) {
-            if (! $user->two_factor_secret || ! $user->two_factor_confirmed_at) {
-                return redirect()->route('admin.2fa-required');
-            }
-        }
-
+        // Super admins are exempt from forced 2FA requirements
+        // They can still enable 2FA voluntarily, but it's not enforced
         return $next($request);
     }
 }

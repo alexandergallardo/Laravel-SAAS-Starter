@@ -34,6 +34,7 @@ class BroadcastController extends Controller
         $validated = $request->validate([
             'subject' => ['required', 'string', 'max:255'],
             'body' => ['required', 'string'],
+            'action_url' => ['nullable', 'url', 'max:2048'],
             'send_via_email' => ['boolean'],
             'send_via_in_app' => ['boolean'],
             'target_segment' => ['required', 'string', 'in:all_users,workspace_owners,super_admins'],

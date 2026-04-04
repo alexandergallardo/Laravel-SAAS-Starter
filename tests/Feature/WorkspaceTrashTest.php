@@ -50,7 +50,7 @@ it('allows an owner to restore a trashed workspace', function () {
     $response = $this->actingAs($this->owner)
         ->post("/workspaces/trash/{$this->workspace->id}/restore");
 
-    $response->assertSuccessful();
+    $response->assertRedirect();
 
     $this->workspace->refresh();
     expect($this->workspace->trashed())->toBeFalse();
@@ -71,7 +71,7 @@ it('allows an owner to permanently delete a workspace', function () {
     $response = $this->actingAs($this->owner)
         ->delete("/workspaces/trash/{$this->workspace->id}");
 
-    $response->assertSuccessful();
+    $response->assertRedirect();
 
     expect(Workspace::withTrashed()->find($this->workspace->id))->toBeNull();
 });

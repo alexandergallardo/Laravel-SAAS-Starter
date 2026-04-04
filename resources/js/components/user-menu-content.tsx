@@ -11,7 +11,7 @@ import { logout } from '@/routes';
 import { edit } from '@/routes/profile';
 import { type User } from '@/types';
 import { Link, router } from '@inertiajs/react';
-import { CreditCard, LogOut, Settings, Users } from 'lucide-react';
+import { CreditCard, LogOut, Settings, UserCog, Users } from 'lucide-react';
 
 interface UserMenuContentProps {
     user: User;
@@ -38,13 +38,28 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
                 <DropdownMenuItem asChild>
                     <Link
                         className="block w-full"
-                        href={edit()}
+                        href="/workspaces/settings"
                         as="button"
                         prefetch
                         onClick={cleanup}
                     >
                         <Settings className="mr-2" />
-                        {t('navigation.settings', 'Settings')}
+                        {t(
+                            'navigation.workspace_settings',
+                            'Workspace Settings',
+                        )}
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                    <Link
+                        className="block w-full"
+                        href={edit()}
+                        as="button"
+                        prefetch
+                        onClick={cleanup}
+                    >
+                        <UserCog className="mr-2" />
+                        {t('navigation.profile_settings', 'Profile Settings')}
                     </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>

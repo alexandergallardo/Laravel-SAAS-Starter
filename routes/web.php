@@ -1,9 +1,12 @@
 <?php
 
+use App\Http\Controllers\ActivityReactionController;
 use App\Http\Controllers\Admin\AdminNotificationController;
+use App\Http\Controllers\Admin\AdminSearchController;
 use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\BroadcastController;
+use App\Http\Controllers\Admin\CohortAnalysisController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FeatureFlagController;
 use App\Http\Controllers\Admin\ImpersonationController;
@@ -19,18 +22,22 @@ use App\Http\Controllers\Admin\RevenueAnalyticsController;
 use App\Http\Controllers\Admin\ScheduledTaskController;
 use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\SeoMetadataController;
+use App\Http\Controllers\Admin\StatusIncidentController;
 use App\Http\Controllers\Admin\SystemHealthController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\TranslationController;
 use App\Http\Controllers\Admin\UserAnalyticsController;
 use App\Http\Controllers\Admin\UserApiTokenController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\UserNoteController;
 use App\Http\Controllers\Admin\UserSessionController;
+use App\Http\Controllers\Admin\WorkspaceActivityHeatmapController;
 use App\Http\Controllers\ApiUsageController;
 use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ChangelogController;
+use App\Http\Controllers\ChangelogWidgetController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\LocaleController;
@@ -39,20 +46,27 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OnboardingChecklistController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\Settings\ConnectedAccountController;
 use App\Http\Controllers\Settings\WorkspaceLogoController;
 use App\Http\Controllers\Settings\WorkspaceSecurityController;
+use App\Http\Controllers\StatusPageController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TeamImportController;
+use App\Http\Controllers\TourController;
 use App\Http\Controllers\UsageController;
 use App\Http\Controllers\WebhookEndpointController;
 use App\Http\Controllers\WebhookLogController;
 use App\Http\Controllers\WorkspaceActivityController;
 use App\Http\Controllers\WorkspaceAnalyticsController;
+use App\Http\Controllers\WorkspaceAnnouncementController;
 use App\Http\Controllers\WorkspaceApiKeyController;
+use App\Http\Controllers\WorkspaceCommentController;
 use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\WorkspaceExportController;
 use App\Http\Controllers\WorkspaceInviteLinkController;
+use App\Http\Controllers\WorkspaceRetentionController;
+use App\Http\Controllers\WorkspaceSearchController;
 use App\Http\Controllers\WorkspaceTrashController;
 use App\Http\Middleware\RequireAdminTwoFactor;
 use Illuminate\Http\Request;
@@ -77,6 +91,9 @@ Route::middleware('guest')->group(function () {
 
 // Public changelog
 Route::get('/changelog', [ChangelogController::class, 'index'])->name('changelog');
+
+// Public status page
+Route::get('/status', [StatusPageController::class, 'index'])->name('status');
 
 // Public invitation acceptance route
 Route::get('/invitations/{token}', [InvitationController::class, 'show'])
@@ -124,6 +141,7 @@ Route::middleware(['auth', 'verified', 'onboarded', 'workspace', 'require2fa', '
         Route::delete('/trash/{workspace}', [WorkspaceTrashController::class, 'forceDelete'])->name('trash.force-delete');
 
         Route::get('/{workspace}/activity', [WorkspaceActivityController::class, 'index'])->name('activity');
+        Route::get('/{workspace}/activity/export', [WorkspaceActivityController::class, 'export'])->name('activity.export');
         Route::get('/analytics', [WorkspaceAnalyticsController::class, 'index'])->name('analytics');
 
         // Workspace API Keys
@@ -133,6 +151,7 @@ Route::middleware(['auth', 'verified', 'onboarded', 'workspace', 'require2fa', '
 
         // API Usage Dashboard
         Route::get('/api-usage', [ApiUsageController::class, 'index'])->name('api-usage.index');
+        Route::get('/api-usage/logs', [ApiUsageController::class, 'logs'])->name('api-usage.logs');
 
         // Webhook routes
         Route::prefix('{workspace}/webhooks')->name('webhooks.')->group(function () {
@@ -143,6 +162,8 @@ Route::middleware(['auth', 'verified', 'onboarded', 'workspace', 'require2fa', '
             Route::post('/{webhookEndpoint}/ping', [WebhookEndpointController::class, 'ping'])->name('ping');
 
             Route::get('/logs', [WebhookLogController::class, 'index'])->name('logs.index');
+            Route::post('/logs/{webhookLog}/retry', [WebhookLogController::class, 'retry'])->name('logs.retry');
+            Route::get('/verification-guide', [WebhookEndpointController::class, 'verificationGuide'])->name('verification-guide');
         });
     });
 
@@ -155,7 +176,10 @@ Route::middleware(['auth', 'verified', 'onboarded', 'workspace', 'require2fa', '
         Route::put('/members/{user}/permissions', [TeamController::class, 'updatePermissions'])->name('update-permissions');
         Route::post('/transfer-ownership/{user}', [TeamController::class, 'transferOwnership'])->name('transfer-ownership');
         Route::delete('/invitations/{invitation}', [TeamController::class, 'cancelInvitation'])->name('cancel-invitation');
+        Route::post('/invitations/{invitation}/resend', [TeamController::class, 'resendInvitation'])->name('resend-invitation');
         Route::get('/activity-report', [MemberActivityController::class, 'index'])->name('activity-report');
+        Route::get('/export-members', [TeamController::class, 'exportMembers'])->name('export-members');
+        Route::post('/bulk-action', [TeamController::class, 'bulkAction'])->name('bulk-action');
 
         // CSV Import
         Route::get('/import', [TeamImportController::class, 'index'])->name('import');
@@ -171,6 +195,8 @@ Route::middleware(['auth', 'verified', 'onboarded', 'workspace', 'require2fa', '
     Route::prefix('billing')->name('billing.')->group(function () {
         Route::get('/', [BillingController::class, 'index'])->name('index');
         Route::get('/plans', [BillingController::class, 'plans'])->name('plans');
+        Route::get('/compare', [BillingController::class, 'compare'])->name('compare');
+        Route::get('/history', [BillingController::class, 'history'])->name('history');
         Route::post('/subscribe', [BillingController::class, 'subscribe'])->name('subscribe');
         Route::post('/cancel', [BillingController::class, 'cancel'])->name('cancel');
         Route::post('/resume', [BillingController::class, 'resume'])->name('resume');
@@ -181,9 +207,56 @@ Route::middleware(['auth', 'verified', 'onboarded', 'workspace', 'require2fa', '
     Route::get('/settings/workspace-security', [WorkspaceSecurityController::class, 'index'])->name('workspace.security');
     Route::put('/settings/workspace-security', [WorkspaceSecurityController::class, 'update'])->name('workspace.security.update');
 
+    // Workspace Danger Zone
+    Route::get('/settings/workspace-danger-zone', [WorkspaceController::class, 'dangerZone'])->name('workspace.danger-zone');
+    Route::delete('/workspaces/leave', [WorkspaceController::class, 'leave'])->name('workspaces.leave');
+
+    // Connected Social Accounts
+    Route::get('/settings/connected-accounts', [ConnectedAccountController::class, 'index'])->name('connected-accounts.index');
+    Route::delete('/settings/connected-accounts/{provider}', [ConnectedAccountController::class, 'destroy'])->name('connected-accounts.destroy');
+
     // Onboarding Checklist
     Route::get('/onboarding-checklist', [OnboardingChecklistController::class, 'index'])->name('onboarding-checklist.index');
     Route::post('/onboarding-checklist/dismiss', [OnboardingChecklistController::class, 'dismiss'])->name('onboarding-checklist.dismiss');
+
+    // Product Tour
+    Route::post('/tour/complete', [TourController::class, 'complete'])->name('tour.complete');
+
+    // Changelog Widget
+    Route::get('/changelog-widget', [ChangelogWidgetController::class, 'index'])->name('changelog-widget.index');
+    Route::post('/changelog-widget/mark-read', [ChangelogWidgetController::class, 'markRead'])->name('changelog-widget.mark-read');
+
+    // Workspace Activity Feed Widget
+    Route::get('/workspace-activity-feed', [WorkspaceActivityController::class, 'feed'])->name('workspace-activity-feed');
+
+    // Workspace Retention Insights Widget
+    Route::get('/workspace-retention-insights', [WorkspaceRetentionController::class, 'index'])->name('workspace-retention-insights');
+
+    // Workspace Comments
+    Route::get('/workspaces/{workspace}/comments', [WorkspaceCommentController::class, 'index'])->name('workspaces.comments.index');
+    Route::post('/workspaces/{workspace}/comments', [WorkspaceCommentController::class, 'store'])->name('workspaces.comments.store');
+    Route::put('/workspaces/{workspace}/comments/{comment}', [WorkspaceCommentController::class, 'update'])->name('workspaces.comments.update');
+    Route::delete('/workspaces/{workspace}/comments/{comment}', [WorkspaceCommentController::class, 'destroy'])->name('workspaces.comments.destroy');
+    Route::get('/workspaces/{workspace}/comments/{comment}/replies', [WorkspaceCommentController::class, 'replies'])->name('workspaces.comments.replies');
+
+    // Workspace Announcements
+    Route::get('/workspaces/{workspace}/announcements', [WorkspaceAnnouncementController::class, 'index'])->name('workspaces.announcements.index');
+    Route::post('/workspaces/{workspace}/announcements', [WorkspaceAnnouncementController::class, 'store'])->name('workspaces.announcements.store');
+    Route::get('/workspaces/{workspace}/announcements/{announcement}', [WorkspaceAnnouncementController::class, 'show'])->name('workspaces.announcements.show');
+    Route::put('/workspaces/{workspace}/announcements/{announcement}', [WorkspaceAnnouncementController::class, 'update'])->name('workspaces.announcements.update');
+    Route::delete('/workspaces/{workspace}/announcements/{announcement}', [WorkspaceAnnouncementController::class, 'destroy'])->name('workspaces.announcements.destroy');
+    Route::post('/workspaces/{workspace}/announcements/{announcement}/dismiss', [WorkspaceAnnouncementController::class, 'dismiss'])->name('workspaces.announcements.dismiss');
+    Route::post('/workspaces/{workspace}/announcements/{announcement}/pin', [WorkspaceAnnouncementController::class, 'pin'])->name('workspaces.announcements.pin');
+    Route::get('/workspaces/{workspace}/announcements/banners/active', [WorkspaceAnnouncementController::class, 'activeBanners'])->name('workspaces.announcements.banners');
+
+    // Activity Reactions
+    Route::get('/workspaces/{workspace}/reactions', [ActivityReactionController::class, 'index'])->name('workspaces.reactions.index');
+    Route::post('/workspaces/{workspace}/reactions', [ActivityReactionController::class, 'store'])->name('workspaces.reactions.store');
+    Route::delete('/workspaces/{workspace}/activities/{activity}/reactions', [ActivityReactionController::class, 'destroy'])->name('workspaces.reactions.destroy');
+
+    // Workspace Search
+    Route::get('/workspaces/{workspace}/search', [WorkspaceSearchController::class, 'search'])->name('workspaces.search');
+    Route::get('/workspaces/{workspace}/search/suggestions', [WorkspaceSearchController::class, 'suggestions'])->name('workspaces.search.suggestions');
 
     // Usage Dashboard
     Route::get('/usage', [UsageController::class, 'index'])->name('usage.index');
@@ -225,11 +298,18 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['onboarded'])->group(function () {
         Route::get('/notifications', [NotificationController::class, 'page'])->name('notifications.page');
 
+        // Help Center
+        Route::get('/help', function () {
+            return Inertia::render('help');
+        })->name('help.index');
+
         // Notifications API
         Route::prefix('api/notifications')->middleware('throttle:api')->name('notifications.')->group(function () {
             Route::get('/', [NotificationController::class, 'index'])->name('index');
             Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+            Route::delete('/read', [NotificationController::class, 'clearRead'])->name('clear-read');
             Route::patch('/{id}/read', [NotificationController::class, 'markAsRead'])->name('mark-read');
+            Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
         });
     });
 
@@ -269,16 +349,20 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
 
     Route::middleware([RequireAdminTwoFactor::class])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/quick-stats', [DashboardController::class, 'quickStats'])->name('quick-stats');
+        Route::get('/search', [AdminSearchController::class, 'search'])->name('search');
         Route::post('/impersonate/{user}', [ImpersonationController::class, 'impersonate'])->name('impersonate');
 
         // User Management
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::get('/users/export', [UserController::class, 'export'])->name('users.export');
+        Route::post('/users/bulk-export', [UserController::class, 'bulkExport'])->name('users.bulk-export');
+        Route::post('/users/bulk-verify-email', [UserController::class, 'bulkVerifyEmail'])->name('users.bulk-verify-email');
+        Route::post('/users/bulk-suspend', [UserController::class, 'bulkSuspend'])->name('users.bulk-suspend');
+        Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
         Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
         Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
         Route::post('/users/{user}/restore', [UserController::class, 'restore'])->name('users.restore');
-        Route::post('/users/bulk-verify-email', [UserController::class, 'bulkVerifyEmail'])->name('users.bulk-verify-email');
-        Route::post('/users/bulk-suspend', [UserController::class, 'bulkSuspend'])->name('users.bulk-suspend');
-        Route::post('/users/bulk-export', [UserController::class, 'bulkExport'])->name('users.bulk-export');
         Route::get('/users/{user}/sessions', [UserSessionController::class, 'index'])->name('users.sessions.index');
         Route::delete('/users/{user}/sessions/{sessionId}', [UserSessionController::class, 'destroy'])->name('users.sessions.destroy');
         Route::delete('/users/{user}/sessions', [UserSessionController::class, 'destroyAll'])->name('users.sessions.destroy-all');
@@ -286,14 +370,22 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
         Route::post('/users/{user}/api-tokens', [UserApiTokenController::class, 'store'])->name('users.api-tokens.store');
         Route::delete('/users/{user}/api-tokens/{tokenId}', [UserApiTokenController::class, 'destroy'])->name('users.api-tokens.destroy');
 
+        // User Notes
+        Route::get('/users/{user}/notes', [UserNoteController::class, 'index'])->name('users.notes.index');
+        Route::post('/users/{user}/notes', [UserNoteController::class, 'store'])->name('users.notes.store');
+        Route::delete('/users/{user}/notes/{note}', [UserNoteController::class, 'destroy'])->name('users.notes.destroy');
+
         // Workspace Management
         Route::get('/workspaces', [App\Http\Controllers\Admin\WorkspaceController::class, 'index'])->name('workspaces.index');
         Route::post('/workspaces/{workspace}/suspend', [App\Http\Controllers\Admin\WorkspaceController::class, 'suspend'])->name('workspaces.suspend');
         Route::post('/workspaces/{workspace}/unsuspend', [App\Http\Controllers\Admin\WorkspaceController::class, 'unsuspend'])->name('workspaces.unsuspend');
+        Route::post('/workspaces/{workspace}/override-plan', [App\Http\Controllers\Admin\WorkspaceController::class, 'overridePlan'])->name('workspaces.override-plan');
 
         // Audit Logs
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+        Route::get('/audit-logs/export', [AuditLogController::class, 'export'])->name('audit-logs.export');
         Route::get('/impersonation-logs', [ImpersonationLogController::class, 'index'])->name('impersonation-logs.index');
+        Route::get('/impersonation-logs/export', [ImpersonationLogController::class, 'export'])->name('impersonation-logs.export');
 
         // Broadcasts
         Route::get('/broadcasts', [BroadcastController::class, 'index'])->name('broadcasts.index');
@@ -344,6 +436,12 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
         Route::put('/changelog/{changelogEntry}', [App\Http\Controllers\Admin\ChangelogController::class, 'update'])->name('changelog.update');
         Route::delete('/changelog/{changelogEntry}', [App\Http\Controllers\Admin\ChangelogController::class, 'destroy'])->name('changelog.destroy');
 
+        // Status Page Incidents
+        Route::get('/status', [StatusIncidentController::class, 'index'])->name('status.index');
+        Route::post('/status', [StatusIncidentController::class, 'store'])->name('status.store');
+        Route::put('/status/{status}', [StatusIncidentController::class, 'update'])->name('status.update');
+        Route::delete('/status/{status}', [StatusIncidentController::class, 'destroy'])->name('status.destroy');
+
         // Scheduled Tasks
         Route::get('/scheduled-tasks', [ScheduledTaskController::class, 'index'])->name('scheduled-tasks.index');
 
@@ -360,11 +458,18 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
         // User Analytics
         Route::get('/user-analytics', [UserAnalyticsController::class, 'index'])->name('user-analytics.index');
 
+        // Cohort Retention Analysis
+        Route::get('/cohort-analysis', [CohortAnalysisController::class, 'index'])->name('cohort-analysis.index');
+
         // Revenue Analytics
         Route::get('/revenue-analytics', [RevenueAnalyticsController::class, 'index'])->name('revenue-analytics.index');
+        Route::get('/revenue-analytics/export', [RevenueAnalyticsController::class, 'export'])->name('revenue-analytics.export');
 
         // Notification Analytics
         Route::get('/notification-analytics', [NotificationAnalyticsController::class, 'index'])->name('notification-analytics.index');
+
+        // Workspace Activity Heatmap
+        Route::get('/workspace-activity-heatmap', WorkspaceActivityHeatmapController::class)->name('workspace-activity-heatmap.index');
 
         // Onboarding Insights
         Route::get('/onboarding-insights', [OnboardingInsightsController::class, 'index'])->name('onboarding-insights.index');

@@ -12,11 +12,20 @@ import {
 import { WorkspaceSwitcher } from '@/components/workspace-switcher';
 import { useTranslations } from '@/hooks/use-translations';
 import { type NavItem, type SharedData } from '@/types';
-import { BarChart3, BookOpen, LayoutGrid, ShieldAlert } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
+import {
+    BarChart3,
+    BookOpen,
+    LayoutGrid,
+    Settings,
+    ShieldAlert,
+} from 'lucide-react';
 import { useMemo } from 'react';
 
-const getMainNavItems = (t: (key: string, fallback: string) => string, isSuperadmin: boolean = false): NavItem[] => {
+const getMainNavItems = (
+    t: (key: string, fallback: string) => string,
+    isSuperadmin: boolean = false,
+): NavItem[] => {
     const items = [
         {
             title: t('navigation.dashboard', 'Dashboard'),
@@ -27,6 +36,11 @@ const getMainNavItems = (t: (key: string, fallback: string) => string, isSuperad
             title: t('navigation.usage', 'Usage'),
             href: '/usage',
             icon: BarChart3,
+        },
+        {
+            title: t('navigation.workspace_settings', 'Workspace Settings'),
+            href: '/workspaces/settings',
+            icon: Settings,
         },
     ];
 
@@ -41,7 +55,9 @@ const getMainNavItems = (t: (key: string, fallback: string) => string, isSuperad
     return items;
 };
 
-const getFooterNavItems = (t: (key: string, fallback: string) => string): NavItem[] => [
+const getFooterNavItems = (
+    t: (key: string, fallback: string) => string,
+): NavItem[] => [
     {
         title: t('navigation.help_center', 'Help Center'),
         href: '/help',
@@ -55,7 +71,10 @@ export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;
     const isSuperadmin = auth.user.is_superadmin === true;
 
-    const mainNavItems = useMemo(() => getMainNavItems(t, isSuperadmin), [t, isSuperadmin]);
+    const mainNavItems = useMemo(
+        () => getMainNavItems(t, isSuperadmin),
+        [t, isSuperadmin],
+    );
     const footerNavItems = useMemo(() => getFooterNavItems(t), [t]);
 
     // Set sidebar to right side for RTL languages

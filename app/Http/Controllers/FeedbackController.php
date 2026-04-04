@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreFeedbackRequest;
 use App\Models\Feedback;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 
 class FeedbackController extends Controller
 {
-    public function store(StoreFeedbackRequest $request): JsonResponse
+    public function store(StoreFeedbackRequest $request): RedirectResponse
     {
         $user = $request->user();
 
@@ -21,6 +21,6 @@ class FeedbackController extends Controller
             'user_agent' => $request->userAgent(),
         ]);
 
-        return response()->json(['message' => 'Feedback submitted. Thank you!']);
+        return back()->with('success', 'Feedback submitted. Thank you!');
     }
 }

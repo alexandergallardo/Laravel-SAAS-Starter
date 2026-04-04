@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Announcement;
 use App\Models\ChangelogEntry;
+use App\Models\ConnectedAccount;
 use App\Models\FeatureFlag;
 use App\Models\Feedback;
 use App\Models\LoginActivity;
@@ -11,7 +12,9 @@ use App\Models\NotificationDeliveryLog;
 use App\Models\OnboardingStepLog;
 use App\Models\PermissionPreset;
 use App\Models\SeoMetadata;
+use App\Models\StatusIncident;
 use App\Models\User;
+use App\Models\UserNote;
 use App\Models\WebhookEndpoint;
 use App\Models\WebhookLog;
 use App\Models\Workspace;
@@ -42,6 +45,7 @@ class DatabaseSeeder extends Seeder
                     'password' => Hash::make('password'),
                     'email_verified_at' => now(),
                     'locale' => 'en',
+                    'onboarded_at' => now(),
                 ]
             );
 
@@ -52,6 +56,7 @@ class DatabaseSeeder extends Seeder
                     'password' => Hash::make('password'),
                     'email_verified_at' => now(),
                     'locale' => 'en',
+                    'onboarded_at' => now(),
                 ]
             );
 
@@ -64,6 +69,7 @@ class DatabaseSeeder extends Seeder
                     'email_verified_at' => now(),
                     'locale' => 'en',
                     'is_superadmin' => true,
+                    'onboarded_at' => now(),
                 ]
             );
 
@@ -128,7 +134,7 @@ class DatabaseSeeder extends Seeder
 
                 // Set different trial/plan scenarios for demo workspaces
                 match ($index) {
-                    0 => null, // Free plan - no trial
+                    0 => $workspace->update(['allowed_email_domains' => ['acme.com', 'acmecorp.com']]), // Free plan – domain restricted to Acme
                     1 => $workspace->update(['trial_ends_at' => now()->addDays(10)]), // Pro plan with active trial
                     2 => $workspace->update(['trial_ends_at' => now()->addDays(5)]), // Business plan with shorter trial
                     default => $workspace->update(['trial_ends_at' => now()->addDays(14)]), // Others with full trial
@@ -265,10 +271,23 @@ class DatabaseSeeder extends Seeder
                         'name' => $name,
                     ]);
 
-                    // Add some members to these workspaces too
-                    $members = $users->reject(fn (User $user) => $user->id === $owner->id)->random(rand(2, 5));
-                    foreach ($members as $member) {
-                        $workspace->addUser($member, 'member');
+                    // Add core test users as admins to 'Startup Hub' for full feature testing
+                    if ($name === 'Startup Hub') {
+                        $workspace->addUser($superadmin, 'admin');
+                        $workspace->addUser($admin, 'admin');
+                        $workspace->addUser($demo, 'admin');
+
+                        // Add some regular members too
+                        $members = $otherUsers->reject(fn (User $user) => $user->id === $owner->id)->random(rand(2, 4));
+                        foreach ($members as $member) {
+                            $workspace->addUser($member, 'member');
+                        }
+                    } else {
+                        // Add some members to these workspaces too
+                        $members = $users->reject(fn (User $user) => $user->id === $owner->id)->random(rand(2, 5));
+                        foreach ($members as $member) {
+                            $workspace->addUser($member, 'member');
+                        }
                     }
 
                     $otherWorkspaces->push($workspace);
@@ -276,14 +295,23 @@ class DatabaseSeeder extends Seeder
             }
 
             // 8. DEMO ACCOUNT: Add demo user as member to some other workspaces (not owner)
-            $workspacesForDemo = $otherWorkspaces->random(min(2, $otherWorkspaces->count()));
+            // Skip Startup Hub since demo is already an admin there
+            $workspacesForDemo = $otherWorkspaces
+                ->reject(fn (Workspace $w) => $w->name === 'Startup Hub')
+                ->random(min(2, $otherWorkspaces->count() - 1));
             foreach ($workspacesForDemo as $workspace) {
                 $workspace->addUser($demo, 'member');
             }
 
-            // 9. DEMO ACCOUNT: Set demo user's current workspace to first team workspace
+            // 9. Set demo user's current workspace to first team workspace
             if ($demoWorkspaces->isNotEmpty()) {
                 $demo->switchWorkspace($demoWorkspaces->first());
+            }
+
+            // Set superadmin's current workspace to Startup Hub (for testing all workspace features)
+            $startupHub = $otherWorkspaces->firstWhere('name', 'Startup Hub');
+            if ($startupHub) {
+                $superadmin->switchWorkspace($startupHub);
             }
 
             // 10. Create some invitations for other workspaces too
@@ -557,7 +585,7 @@ class DatabaseSeeder extends Seeder
                     'token' => Str::random(32),
                     'role' => 'member',
                     'max_uses' => 10,
-                    'uses' => 3,
+                    'uses_count' => 3,
                     'expires_at' => now()->addDays(14),
                 ]);
 
@@ -567,7 +595,7 @@ class DatabaseSeeder extends Seeder
                     'token' => Str::random(32),
                     'role' => 'admin',
                     'max_uses' => null,
-                    'uses' => 0,
+                    'uses_count' => 0,
                     'expires_at' => null,
                 ]);
 
@@ -712,6 +740,108 @@ class DatabaseSeeder extends Seeder
                     $preset,
                 );
             }
+
+            // Seed sample status page incidents
+            $statusIncidents = [
+                [
+                    'title' => 'Elevated API response times',
+                    'message' => 'We are investigating increased latency on API endpoints. Engineers are working on identifying the root cause.',
+                    'status' => 'degraded',
+                    'resolved_at' => now()->subDays(10),
+                    'created_at' => now()->subDays(10)->subHours(2),
+                ],
+                [
+                    'title' => 'Scheduled database maintenance',
+                    'message' => 'Routine database maintenance window from 02:00–04:00 UTC. Expect brief interruptions to write operations.',
+                    'status' => 'operational',
+                    'resolved_at' => now()->subDays(5),
+                    'created_at' => now()->subDays(5)->subHours(3),
+                ],
+                [
+                    'title' => 'Webhook delivery delays',
+                    'message' => 'Some webhook deliveries are being delayed by up to 10 minutes due to a queue backlog. Deliveries are not being lost.',
+                    'status' => 'degraded',
+                    'resolved_at' => null,
+                    'created_at' => now()->subHours(4),
+                ],
+            ];
+
+            foreach ($statusIncidents as $incident) {
+                StatusIncident::create($incident);
+            }
+
+            // Seed connected social accounts for demo user
+            ConnectedAccount::create([
+                'user_id' => $demo->id,
+                'provider' => 'github',
+                'provider_id' => '12345678',
+                'name' => 'Demo User',
+                'email' => 'demo@example.com',
+                'avatar' => 'https://avatars.githubusercontent.com/u/12345678?v=4',
+                'token' => encrypt('ghp_demo_token_'.Str::random(20)),
+            ]);
+
+            ConnectedAccount::create([
+                'user_id' => $demo->id,
+                'provider' => 'google',
+                'provider_id' => '987654321',
+                'name' => 'Demo User',
+                'email' => 'demo.user@gmail.com',
+                'avatar' => null,
+                'token' => encrypt('ya29.demo_token_'.Str::random(20)),
+            ]);
+
+            // Seed user sessions for demo user (active sessions)
+            DB::table('sessions')->insert([
+                'id' => Str::random(40),
+                'user_id' => $demo->id,
+                'ip_address' => '192.168.1.100',
+                'user_agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'payload' => base64_encode(serialize(['_token' => Str::random(40)])),
+                'last_activity' => time(),
+            ]);
+
+            DB::table('sessions')->insert([
+                'id' => Str::random(40),
+                'user_id' => $demo->id,
+                'ip_address' => '10.0.0.50',
+                'user_agent' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+                'payload' => base64_encode(serialize(['_token' => Str::random(40)])),
+                'last_activity' => time() - 3600, // 1 hour ago
+            ]);
+
+            // Seed admin notes on some users
+            UserNote::create([
+                'user_id' => $demo->id,
+                'admin_id' => $superadmin->id,
+                'note' => 'High-value customer. Engaged with premium features and submitted helpful feedback.',
+            ]);
+
+            UserNote::create([
+                'user_id' => $additionalUsers->first()->id,
+                'admin_id' => $superadmin->id,
+                'note' => 'Technical issue reported last week. Follow up required.',
+            ]);
+
+            // Create a workspace with 2FA enforced
+            $secureWorkspace = $workspaceService->create($admin, [
+                'name' => 'Secure Operations',
+            ]);
+            $secureWorkspace->update([
+                'require_two_factor' => true,
+                'allowed_email_domains' => ['securecorp.com'],
+            ]);
+
+            // Add demo user to this workspace
+            $secureWorkspace->addUser($demo, 'member');
+
+            // Create workspace with expired trial
+            $expiredWorkspace = $workspaceService->create($demo, [
+                'name' => 'Expired Trial Workspace',
+            ]);
+            $expiredWorkspace->update([
+                'trial_ends_at' => now()->subDays(5),
+            ]);
         });
     }
 }

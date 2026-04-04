@@ -61,6 +61,9 @@ class Workspace extends Model
         'personal_workspace',
         'require_two_factor',
         'allowed_ips',
+        'allowed_email_domains',
+        'plan_override',
+        'billing_email',
         'suspended_at',
         'suspension_reason',
     ];
@@ -77,6 +80,7 @@ class Workspace extends Model
             'require_two_factor' => 'boolean',
             'trial_ends_at' => 'datetime',
             'allowed_ips' => 'array',
+            'allowed_email_domains' => 'array',
             'suspended_at' => 'datetime',
         ];
     }
@@ -390,6 +394,17 @@ class Workspace extends Model
             return $this->resolvedPlan;
         }
 
+        if ($this->plan_override) {
+            $plans = config('billing.plans');
+            foreach ($plans as $planKey => $plan) {
+                if (strtolower($plan['name']) === strtolower($this->plan_override) || $planKey === strtolower($this->plan_override)) {
+                    return $this->resolvedPlan = ['name' => $plan['name'], 'key' => $planKey];
+                }
+            }
+
+            return $this->resolvedPlan = ['name' => $this->plan_override, 'key' => strtolower($this->plan_override)];
+        }
+
         if ($this->subscribed('default')) {
             $subscription = $this->subscription('default');
             $priceId = $subscription->stripe_price;
@@ -492,6 +507,21 @@ class Workspace extends Model
         $limit = $this->seatLimit();
 
         return $limit === -1 || $this->activeSeatCount() < $limit;
+    }
+
+    /**
+     * Determine if the given email address is allowed to join this workspace based on domain restrictions.
+     * Returns true when no restrictions are set.
+     */
+    public function isEmailDomainAllowed(string $email): bool
+    {
+        if (empty($this->allowed_email_domains)) {
+            return true;
+        }
+
+        $domain = strtolower(Str::after($email, '@'));
+
+        return in_array($domain, array_map('strtolower', $this->allowed_email_domains));
     }
 
     /**

@@ -23,7 +23,115 @@ The AI agent is now continually managing and executing the roadmap autonomously.
 - **Stack**: Laravel 12, Inertia.js v2, React 19, Tailwind CSS v4, Stripe Cashier, Fortify.
 - **Completed Features**: Auth, 2FA, Workspaces, Teams, Stripe Billing, i18n, Dark Mode, Super Admin Panel, Feature Flags (Pennant), Announcements, Audit Logs, Command Palette.
 
-## 🚀 Active Sprint 26: Team Role UX Reliability
+## 🚀 Active Sprint 30: Engagement & Observability
+
+- [x] **Task 123**: In-App Changelog Widget — `changelog_read_at` on users, `ChangelogWidgetController` (index + mark-read), `ChangelogWidget` popover component with unread badge, mounted in app header. ✅ (9 tests, 20 assertions)
+- [x] **Task 124**: Workspace Activity Feed — `WorkspaceActivityController::feed()` at `GET /workspace-activity-feed` returns last 5 workspace activities as JSON, `WorkspaceActivityFeed` card widget mounted on dashboard with loading skeleton and empty state. ✅ (8 tests, 25 assertions)
+- [x] **Task 125**: Admin Revenue Export CSV — `RevenueAnalyticsController::export()` at `GET /admin/revenue-analytics/export` streams CSV with workspace name, plan, billing interval, status, MRR, quantity, dates. Export CSV button added to revenue analytics page. ✅ (7 tests, 17 assertions)
+- [x] **Task 126**: Webhook Signature Verification Guide — `WebhookEndpointController::verificationGuide()` at `GET /workspaces/{workspace}/webhooks/verification-guide`, Inertia page with step-by-step explanation, PHP/Node.js/Python code samples with copy buttons, link from webhooks index. ✅ (6 tests, 41 assertions)
+- [x] **Task 127**: User Profile Completeness Score — `User::profileCompletenessScore()` checks avatar, bio, non-UTC timezone, 2FA (4 checks × 25 pts each), shared as `auth.user.profile_completeness` via Inertia middleware, progress bar card on profile settings page when < 100%. ✅ (8 tests, 29 assertions)
+
+## 🚀 Active Sprint 36: Developer Experience & Admin Power Tools
+
+- [x] **Task 153**: Workspace API Key Last Used Timestamp — `last_used_at` column + `recordUsage()` were pre-existing; enhanced display from absolute date to `formatDistanceToNow()` relative time on API keys page. ✅ (4 tests, 34 assertions)
+- [x] **Task 154**: Admin Impersonation Audit Log — `ImpersonationController::impersonate()` now logs Spatie activity entry (event=`impersonated`, causer=admin, subject=target); `GET /admin/users/{user}` show page with impersonation history + activity log; "View Detail" added to admin users dropdown. ✅ (5 tests, 40 assertions)
+- [x] **Task 155**: Workspace Onboarding Progress Bar — `WorkspaceController::computeOnboardingProgress()` computes 5-step score (has_logo, has_members, has_webhook, has_api_key, owner_has_2fa); `onboardingProgress` prop in `settings()` Inertia response; progress bar card with step checklist on workspace settings page (hidden when 100%). ✅ (6 tests, 69 assertions)
+- [x] **Task 156**: Super Admin Quick Stats Widget — `DashboardController::quickStats()` at `GET /admin/quick-stats` returns JSON (total_users, total_workspaces, mrr); `AdminQuickStatsWidget` fetches and renders a compact 3-column stat bar in the admin sidebar footer with loading skeleton. ✅ (4 tests, 10 assertions)
+- [x] **Task 157**: User Last Seen Timestamp — Track `last_seen_at` on users (updated on each authenticated web request via middleware); display in admin user list and workspace team member list. ✅ (6 tests, 34 assertions)
+- [x] **Task 158**: User Login Methods Summary — `SecuritySummaryController` at `GET /settings/security-summary` returns JSON with password status, 2FA status, connected social accounts, security score (0-100), and recommendations; `SecuritySummaryCard` React component displays on profile settings with visual indicators and quick action links. ✅ (12 tests, 48 assertions)
+- [x] **Task 159**: Session Activity Summary — `SessionSummaryController` at `GET /settings/session-summary` returns session count, current device info, and other sessions summary; `SessionSummaryCard` component on profile settings shows active sessions with "Sign Out All Other Devices" action; integrates with existing `SessionController` revoke functionality. ✅ (8 tests, 24 assertions)
+
+## 🚀 Active Sprint 40: Advanced Workspace Features & Automation
+
+- [x] **Task 170**: Workspace Templates — Template system for rapid workspace creation. `WorkspaceTemplate` model with JSON configuration storage. `WorkspaceTemplateController` with index/store/show/update/destroy/use/duplicate endpoints. `WorkspaceTemplateService` extracts configuration from source workspaces and applies to new workspaces. Supports public/private templates, categories, and usage tracking. 12 Pest tests. ✅
+- [x] **Task 171**: Advanced Workspace Search — Unified search across workspace content. `WorkspaceSearchController` searches activities, comments, announcements, and members. Faceted results with type filtering. Suggestions endpoint for autocomplete. 5 Pest tests. ✅
+- [x] **Task 172**: Workspace Tags/Labels — Polymorphic tagging system with `tags` and `taggables` tables. Color-coded labels with preset palette. `TagController` with CRUD, attach/detach, and available tags endpoints. Global and workspace-specific tags supported. 13 Pest tests. ✅
+- [x] **Task 173**: Custom Workspace Fields — Extensible custom field system with `custom_field_definitions` and `custom_field_values` tables. Supports 7 field types: text, textarea, number, date, boolean, select, url. Field validation, type casting, and reordering. 12 Pest tests. ✅
+
+## 🏁 Completed Sprint 39: Team Collaboration & Communication
+
+- [x] **Task 166**: Workspace Comments/Discussions — Created polymorphic comment system with `workspace_comments` table supporting threaded replies. `WorkspaceCommentController` with index/store/update/destroy/replies endpoints. `MentionService` to extract @username mentions from content. 12 Pest tests with comprehensive coverage for CRUD, authorization, and nested replies. ✅
+- [x] **Task 167**: @Mentions System with Notifications — `UserMentioned` notification with email+database channels respecting user preferences. `MentionService::processMentions()` automatically extracts and notifies mentioned users when comments are created. Excludes self-mentions. Integrated into comment creation flow. ✅
+- [x] **Task 168**: Workspace-Level Announcements — `WorkspaceAnnouncement` model with types (info/warning/success), pinning, dismissal tracking, and expiry dates. `WorkspaceAnnouncementController` with full CRUD, dismiss, and pin endpoints. `workspace_announcement_reads` pivot table tracks per-user read status. 14 Pest tests with coverage for permissions, expiry, and read tracking. ✅
+- [x] **Task 169**: Activity Reactions (Emoji) — `ActivityReaction` model with toggle functionality. `ActivityReactionController` with store/destroy/index endpoints. `getGroupedForActivity()` aggregates reactions by emoji with counts and user IDs. Real-time broadcast via Reverb on reaction changes. 12 Pest tests covering toggle behavior and grouping. ✅
+
+## 🏁 Completed Sprint 38: Customer-Facing Billing Experience
+
+- [x] **Task 163**: Plan Comparison Table — Created `/billing/compare` page with side-by-side feature comparison for all plans (Free, Pro, Business). Includes monthly/yearly billing toggle with 20% savings indicator. Shows team member limits, workspace limits, storage, and feature matrix. Highlights current plan. FAQ section with common questions. "Compare Plans" button added to billing index page. 6 Pest tests with 61 assertions. ✅
+- [x] **Task 164**: Enhanced Billing History — Created `/billing/history` page with full invoice history. Features date filtering (30/90/365 days), search by date/amount/invoice ID, stats cards showing total invoices, filtered amount, and last invoice date. Clean list view with PDF download buttons. "View History" link from billing page. 5 Pest tests with 46 assertions. ✅
+- [x] **Task 165**: Self-Service Cancellation with Retention — Created `CancellationFlow` component with 4-step process: 1) Reason selection with feedback, 2) Contextual retention offer based on reason (discount, downgrade suggestion, feature roadmap), 3) Final confirmation with impact details, 4) Success state. Integrated into billing page with "Cancel Subscription" button. Collects cancellation analytics. 5 Pest tests with 6 assertions. ✅
+
+## 🏁 Completed Sprint 37: Settings Architecture & UX Refinement
+
+- [x] **Task 160**: Profile Settings Reorganization — Reorganized profile settings from 11 flat items into 4 logical sections (Profile, Security, Privacy, Support). Merged Password + 2FA into combined "Authentication" page. Moved Appearance (theme toggle) into General/Profile page. Renamed "Privacy & Cookies" to "Cookies". Moved Security Summary and Session Summary cards from Profile to Authentication page for better logical grouping. Updated all layouts (profile-layout.tsx, workspace-layout.tsx) with new navigation structure. Added redirects for backward compatibility. ✅
+- [x] **Task 161**: Workspace Settings Menu Enhancement — Added "Workspace Settings" link to main sidebar for quick access. Improved workspace settings layout organization with consistent icons for all menu items. Added test users (superadmin, admin, demo) as admins to "Startup Hub" workspace in seeder for full feature testing. ✅
+- [x] **Task 162**: Settings Menu Navigation Fixes — Fixed user menu dropdown to have clear separation between "Workspace Settings" and "Profile Settings". Removed redundant menu items. Ensured all menu items have proper icons. ✅
+
+## 🏁 Completed Sprint 35: Security, Observability & Quality-of-Life
+
+- [x] **Task 148**: Workspace Audit Log Export — `WorkspaceActivityController::export()` at `GET /workspaces/{workspace}/activity/export` streams CSV (Date, Event, Causer, Subject Type, Description); "Export CSV" button added to workspace activity page. ✅ (7 tests, 24 assertions)
+- [x] **Task 149**: Admin User Export CSV — `UserController::export()` at `GET /admin/users/export` streams CSV (ID, Name, Email, Superadmin, Workspaces, Email Verified, Created At, Deleted At); "Export All" button added next to search on admin users page. ✅ (7 tests, 23 assertions)
+- [x] **Task 150**: Workspace Member Count Limit Warning — When `canInvite` is false, amber `Alert` card renders at top of team page with `memberLimitMessage` text and "Upgrade Plan" CTA linking to billing. ✅ (5 tests, 57 assertions)
+- [x] **Task 151**: Login Streak Tracker — `User::currentLoginStreak()` and `longestLoginStreak()` computed from `login_activities`; shared via `ProfileController::edit()` as `loginStreak`; displayed as a streak card on profile settings page. ✅ (11 tests, 25 assertions)
+- [x] **Task 152**: Admin Dashboard Sparklines — `DashboardController` computes 7-day `sparklines` (new_users, new_workspaces, new_subscriptions); inline SVG `Sparkline` polyline component renders in all 4 metric cards on admin dashboard. ✅ (4 tests, 54 assertions)
+
+## 🏁 Completed Sprint 34: Power UX & Platform Hardening
+
+- [x] **Task 143**: Workspace Member Search & Filter — search input with clear button filters members by name/email client-side; role filter dropdown (All/Owner/Admin/Member/Viewer); results count badge in title when active; empty state with "Clear filters" link. ✅ (5 tests, 47 assertions)
+- [x] **Task 144**: Admin Workspace Usage Heatmap — `GET /admin/workspace-activity-heatmap` aggregates `api_request_logs` daily counts for last 52 weeks; React page renders GitHub-style contribution heatmap with color-coded cells, month labels, legend, and 3-stat summary row. ✅ (5 tests, 48 assertions)
+- [x] **Task 145**: Two-Factor Recovery Code Regeneration — Fortify's `POST /user/two-factor-recovery-codes` already wired; "Regenerate Codes" button already in `TwoFactorRecoveryCodes` component (shown when codes visible); tested in `TwoFactorFlowTest`. ✅ (pre-existing)
+- [x] **Task 146**: Workspace Billing Email Override — nullable `billing_email` on workspaces migration; `WorkspaceRequest` validates email format; `WorkspaceService::update()` persists it; billing email card added to workspace settings page. ✅ (5 tests, 18 assertions)
+- [x] **Task 147**: Admin Broadcast System Message — `BroadcastController` + `DispatchBroadcastMessage` job + `PlatformBroadcast` notification already existed; added optional `action_url` column (migration + validation + `toArray()`); action URL field added to broadcast form UI. ✅ (6 tests, 21 assertions)
+
+## 🏁 Completed Sprint 33: Analytics, Automation & Developer Ergonomics
+
+- [x] **Task 138**: Workspace Invitation Expiry — `expires_at` already on model (7-day default); added `POST /team/invitations/{invitation}/resend` endpoint that resets expiry + resends notification; "Resend" button + "Expired" badge added to pending invitations list in team page. ✅ (8 tests, 19 assertions)
+- [x] **Task 139**: Admin User Impersonation Audit Trail — `ImpersonationLog` model and index page already existed; added `GET /admin/impersonation-logs/export` CSV endpoint + Export CSV button to the impersonation logs page. ✅ (5 tests, 23 assertions)
+- [x] **Task 140**: Workspace Transfer Ownership — `POST /team/transfer-ownership/{user}` swaps `owner_id` + updates pivot roles; Danger Zone page updated with Select dropdown (admin users), confirmation step, owner-only guard; `WorkspaceController::dangerZone()` passes `admins` list. ✅ (6 tests, 13 assertions)
+- [x] **Task 141**: Notification Read-All Button — `POST /api/notifications/mark-all-read` already implemented in `NotificationController::markAllAsRead()`; "Mark all as read" button present in both notifications dropdown and full notifications page. ✅ (pre-existing)
+- [x] **Task 142**: API Key Last-Used At — `last_used_at` already on `workspace_api_keys` migration; `AuthenticateApiKey` middleware calls `$apiKey->recordUsage()` on every request; displayed in API keys table. ✅ (pre-existing)
+
+## 🏁 Completed Sprint 32: Compliance, Power Features & UX Polish
+
+- [x] **Task 133**: Workspace Member Bulk Actions — checkboxes on team member rows, floating action bar when members selected, `POST /team/bulk-action` endpoint supporting `remove` and `change_role` actions on multiple user IDs. ✅ (12 tests, 29 assertions)
+- [x] **Task 134**: GDPR User Data Export — Enhanced existing `ExportPersonalDataJob` to include `login_history` (last 500 login activities) and `notifications` (last 500 database notifications) in the ZIP export alongside profile, workspaces, and connected accounts. ✅ (5 tests, 13 assertions)
+- [x] **Task 135**: Admin Workspace Plan Override — `plan_override` nullable varchar on workspaces table, superadmin can set/clear via `POST /admin/workspaces/{id}/override-plan`, `plan_name` resolves override first. "Override Plan" menu item + dialog in admin workspaces table. ✅ (8 tests, 15 assertions)
+- [x] **Task 136**: Workspace Settings Quick Stats — compact stats row at top of workspace settings page (total members, plan, workspace age, API keys count). Makes the settings page richer at a glance. ✅ (6 tests, 12 assertions)
+- [x] **Task 137**: Custom Error Pages — `resources/js/pages/error.tsx` React page handles 403/404/429/500/503 with themed layout and back/home buttons. Registered via `$exceptions->respond()` in `bootstrap/app.php` — only renders Inertia error page for `X-Inertia` requests. ✅ (5 tests, 9 assertions)
+
+## 🏁 Completed Sprint 31: Retention, Insights & Developer Tools
+
+- [x] **Task 128**: Workspace Retention Insights Widget — `WorkspaceRetentionController::index()` at `GET /workspace-retention-insights`, returns total_members/active_last_30_days/retention_rate JSON, `WorkspaceRetentionWidget` card with progress bar and color-coded rate, placed alongside Activity Feed on dashboard in a 2-column grid. ✅ (8 tests, 19 assertions)
+- [x] **Task 129**: API Request Log Viewer — `ApiUsageController::logs()` at `GET /workspaces/api-usage/logs`, paginated (15/page) Inertia page with method/status-group/path filters, color-coded method badges and status codes, throttled indicator, "View Request Logs" button added to api-usage dashboard. ✅ (10 tests, 112 assertions)
+- [x] **Task 130**: Workspace Danger Zone — `WorkspaceController::dangerZone()` + `leave()`, `GET /settings/workspace-danger-zone` page with delete workspace (owners, name-confirm guard), leave workspace (non-owners, confirm step), transfer ownership link, personal workspace notice. "Danger Zone" added to settings sidebar. ✅ (10 tests, 52 assertions)
+- [x] **Task 131**: Global Search (Admin) — `AdminSearchController::search()` at `GET /admin/search?q=`, returns users (name/email match), workspaces (name/slug match), subscriptions (owner/status/price match), max 5 per category. `AdminSearchBar` component with debounce + click-outside dismiss mounted in admin sidebar. ✅ (10 tests, 24 assertions)
+- [x] **Task 132**: Notification Digest Preview Command — `app:preview-weekly-digest {workspace}` Artisan command, accepts workspace ID or slug, prints subject, greeting, email body lines, action button, and stats summary (members, delta, activity count) to terminal without sending. ✅ (6 tests, 12 assertions)
+
+## 🏁 Completed Sprint 29: User Trust & Admin Control
+
+- [x] **Task 118**: Connected Social Accounts Settings — `ConnectedAccountController` with `index()` / `destroy()`, nullable `password` migration, provider cards (GitHub/Google) with connect/disconnect UI, safety guard preventing disconnect of last login method, settings nav entry. ✅ (9 tests, 60 assertions)
+- [x] **Task 119**: Admin User Notes — `user_notes` table + `UserNote` model, `UserNoteController` (index/store/destroy), notes dialog in admin users page with inline fetch, add/delete UI. ✅ (9 tests, 22 assertions)
+- [x] **Task 120**: Workspace Slug Edit — dedicated slug edit tests, slug normalisation via `Str::slug()`, uniqueness guard, member permission check, warning banner in settings UI when slug changes. ✅ (7 tests, 24 assertions)
+- [x] **Task 121**: API Key Expiry Alerts — `ApiKeyExpiryNotification` (security category, email+in-app), `app:send-api-key-expiry-alerts` command with 1/3/7-day warning thresholds + `--dry-run`, scheduled daily at 08:00 UTC. ✅ (8 tests, 16 assertions)
+- [x] **Task 122**: Workspace Member CSV Export — `TeamController::exportMembers()` at `GET /team/export-members`, CSV columns (ID, Name, Email, Role, Timezone, Joined At), admin/owner-only gate, Export CSV button in team page. ✅ (7 tests, 18 assertions)
+
+## 🏁 Completed Sprint 28: Platform Polish & Developer Experience
+
+- [x] **Task 113**: Webhook Log Redelivery
+- [x] **Task 114**: Audit Log CSV Export
+- [x] **Task 115**: Workspace Plan Usage Alerts
+- [x] **Task 116**: Announcement Scheduling
+- [x] **Task 117**: Full Notification History Page
+
+## 🏁 Completed Sprint 27: Enterprise & Growth Hardening
+
+- [x] **Task 108**: Workspace Email Domain Restriction — `allowed_email_domains` JSON column, `Workspace::isEmailDomainAllowed()` helper, enforcement on invitation acceptance and invite-link joins, domain restriction card in security settings UI. ✅ (11 tests, 18 assertions)
+- [x] **Task 109**: Weekly Workspace Activity Digest Email — `WeeklyWorkspaceDigestNotification` with team category + channel preference enforcement, `app:send-weekly-digests` command scheduled Monday 08:00 UTC with `--dry-run` support. ✅ (7 tests, 14 assertions)
+- [x] **Task 110**: Admin Cohort Retention Analysis — triangular cohort table at `/admin/cohort-analysis` with 6-month history, 3 retention months, colour-coded cells (green/amber/red), average row, admin nav entry. ✅ (5 tests, 72 assertions)
+- [x] **Task 111**: Public Status Page — `StatusIncident` model with `scopeRecent()` / `isActive()` / `isResolved()`, public `/status` page with overall status banner (operational/degraded/outage/maintenance), admin CRUD at `/admin/status` with inline create/edit form and auto-resolve logic, 3 seeded sample incidents. ✅ (17 tests, 114 assertions)
+- [x] **Task 112**: In-App Product Tour — `tour_completed_at` column on users, `TourController::complete()` at `POST /tour/complete`, `use-tour.ts` hook with 4 steps, `ProductTour` + `TourTooltip` components with backdrop, highlight ring, progress dots, Next/Skip/Done, mounted on dashboard for users with `!tour_completed_at`. ✅ (3 tests, 4 assertions)
+
+## 🏁 Completed Sprint 26: Team Role UX Reliability
 
 - [x] **Task 99**: Team Role Action Parity & Viewer Flow Coverage — Replace ambiguous role toggle actions with explicit role transitions in Team UI and validate viewer-role transitions across member updates and invite links. ✅ (4 tests, 20 assertions)
 - [x] **Task 100**: Team Permission Input Guardrails — Enforce allowed granular permission identifiers on team member permission updates and validate accepted/rejected payload paths. ✅ (2 tests, 4 assertions)
@@ -65,6 +173,62 @@ The AI agent is now continually managing and executing the roadmap autonomously.
 - **Sprint 12**: Enterprise Mechanics (Seat-Based Billing, Data Retention, 2FA Enforcement).
 
 ## 📝 Changelog
+
+- **2026-03-23**: Sprint 40 (Advanced Workspace Features): Task 170 (Workspace Templates) — template system for rapid workspace creation with JSON configuration, public/private visibility, categories. Task 171 (Advanced Search) — unified search across activities, comments, announcements, members with faceted results. Task 172 (Workspace Tags) — color-coded labels with polymorphic tagging system. Task 173 (Custom Fields) — extensible field system with 7 field types, validation, and reordering. 42 Pest tests with 91 assertions. ✅
+
+- **2026-03-23**: Sprint 39 (Team Collaboration & Communication): Task 166 (Workspace Comments) — polymorphic comment system with threaded replies, `MentionService` for @username extraction, full CRUD endpoints. Task 167 (@Mentions) — `UserMentioned` notification with email+database channels. Task 168 (Workspace Announcements) — announcement system with pinning, dismissal tracking, expiry dates, and read status. Task 169 (Activity Reactions) — emoji reactions with toggle functionality and real-time broadcasts. 38 Pest tests with 90 assertions. ✅
+
+- **2026-03-22**: Task 165 (Self-Service Cancellation): Created `CancellationFlow` component with multi-step cancellation process. Step 1: Reason selection with optional feedback. Step 2: Contextual retention offers (discount, downgrade suggestion, pause option). Step 3: Final confirmation with clear impact details. Step 4: Success confirmation. Integrated into billing page. Helps reduce churn with targeted offers. 5 Pest tests with 6 assertions.
+
+- **2026-03-22**: Task 164 (Enhanced Billing History): Created `/billing/history` page with complete invoice history. Features date filtering (30/90/365 days), search functionality, stats cards (total invoices, filtered amount, last invoice). Clean responsive list view with PDF download. "View History" link from billing page. 5 Pest tests with 46 assertions.
+
+- **2026-03-22**: Task 163 (Plan Comparison Table): Created `/billing/compare` page with side-by-side plan comparison showing all features, limits, and pricing. Added monthly/yearly toggle with 20% savings indicator. Highlights current plan with comparison matrix. FAQ section included. "Compare Plans" button added to billing page. 6 Pest tests with 61 assertions.
+
+- **2026-03-22**: Task 162 (Settings Menu Navigation): Fixed user menu dropdown with clear separation between Workspace Settings and Profile Settings. Removed redundant menu items. Ensured all menu items have proper icons. Updated seeder to add test users as admins to "Startup Hub" workspace.
+
+- **2026-03-22**: Task 161 (Workspace Settings Menu Enhancement): Added "Workspace Settings" link to main sidebar (app-sidebar.tsx) for quick access. Improved workspace settings layout organization with consistent icons for all menu items.
+
+- **2026-03-22**: Task 160 (Profile Settings Reorganization): Reorganized profile settings from 11 flat items into 4 logical sections (Profile: General + Connected Accounts; Security: Authentication + Sessions + Login History; Privacy: Cookies + Notifications + API Tokens; Support: Tickets). Merged Password + 2FA into combined "Authentication" page at `/settings/security/authentication`. Moved Appearance (theme toggle) into General/Profile page. Renamed "Privacy & Cookies" to "Cookies". Moved Security Summary and Session Summary cards to Authentication page. Added redirects for backward compatibility.
+
+- **2026-03-22**: Fixed Help Center Page: Created `/help` page component with search bar, help categories (Getting Started, Account & Billing, Support Tickets, API Documentation), quick links, and contact support CTA; added route `GET /help` in web.php; page linked from sidebar footer.
+
+- **2026-03-22**: Fixed Support Tickets Page Layout: Added proper `title` and `description` props to SettingsLayout; removed duplicate heading (layout now handles it); added CTA button in empty state; improved empty state icon (MessageSquare) and description; all 10 ticket tests pass.
+
+- **2026-03-22**: Fixed Privacy Settings Page: Added missing route `GET /settings/privacy` in `routes/settings.php` that was referenced in the navigation menu but returned 404.
+
+- **2026-03-22**: Improved Settings Menu: Reorganized into 5 logical sections (Workspace, Team, Analytics, Security, Account); added consistent icons to ALL menu items (Building2, CreditCard, Users, FileUp, BarChart3, TrendingUp, Activity, History, Shield, Webhook, AlertTriangle); renamed "Team" to "Members" and "Activity" to "Activity Log" for clarity; all items now have icons - no more empty icon slots.
+
+- **2026-03-22**: Fixed Billing Page: Added null check before `Object.entries(usage)` on line 373 to prevent TypeError when usage data is deferred/undefined; all 46 billing tests pass.
+
+- **2026-03-22**: Fixed Product Tour: Tour now waits for DOM to be ready before checking targets; added fallback to centered modal when targets not found; improved retry logic with 10 attempts; added close button and better error handling.
+
+- **2026-03-22**: Improved onboarding wizard step 3 (Plan Selection): Replaced ugly dropdown with beautiful plan cards showing pricing, features, and limits; added billing period toggle (monthly/yearly) with savings badge; visual plan selection with clear CTAs; responsive 3-column layout with popular plan highlighting.
+
+- **2026-03-22**: Task 159 (Session Activity Summary): Created `SessionSummaryController` returning session summary JSON with device/browser/platform parsing; built `SessionSummaryCard` React component showing current session, other sessions count, last activity info; integrated with existing session revocation endpoints; 8 Pest tests with 24 assertions; documentation at `/docs/features/session-summary.md`.
+
+- **2026-03-22**: Task 158 (User Login Methods Summary): Created `SecuritySummaryController` with authentication methods aggregation and security score calculation; built `SecuritySummaryCard` React component with password/2FA/social account indicators, color-coded progress bar, and contextual recommendations; added `ConnectedAccountFactory` for testing; 12 Pest tests with 48 assertions; documentation at `/docs/features/security-summary.md`.
+
+- **2026-03-22**: Task 157 (User Last Seen Timestamp): Verified existing implementation - `TrackLastSeen` middleware with 5-minute throttle, `last_seen_at` column on users, displayed in admin user list and team member pages; fixed Pest tests to include workspace context, all 6 tests passing. Created `/docs/features/user-last-seen.md` documentation.
+
+- **2026-03-13**: Task 117 (Full Notification History Page): added `?filter=unread` support to notifications page (backend query + Inertia prop), `unreadCount` shared prop, `DELETE /api/notifications/{id}` to remove a single notification, `DELETE /api/notifications/read` to bulk-clear all read notifications; updated notifications page with All/Unread filter tabs, per-notification delete button, and "Clear read" action. *(6 new tests, 58 assertions total)*
+
+- **2026-03-13**: Task 116 (Announcement Scheduling): enhanced `AnnouncementController::index()` with computed `status` field (`live`/`scheduled`/`expired`/`inactive`) per announcement and `?status` filter query param, updated announcements admin page with status filter tabs and colour-coded status badges (Live/Scheduled/Expired/Inactive) replacing the binary Active/Inactive badge. *(7 new tests, 77 assertions total)*
+
+- **2026-03-13**: Task 115 (Workspace Plan Usage Alerts): added `PlanUsageLimitNotification` (mail + database with billing-category/channel-preference guard), `app:send-plan-usage-alerts` Artisan command computing team_members/api_keys/webhooks usage % per workspace against `PlanLimitService` limits, notifying owners when any dimension ≥80%, scheduled daily at 10:00 UTC with `--dry-run` support. *(9 tests, 16 assertions)*
+
+- **2026-03-13**: Task 114 (Audit Log CSV Export): added `export()` action on `AuditLogController` streaming chunked CSV with current filter params applied, Export CSV button on the admin audit-logs page, route at `GET /admin/audit-logs/export`. *(3 tests, 5 assertions)*
+
+- **2026-03-13**: Task 113 (Webhook Log Redelivery): added `retry()` action on `WebhookLogController` re-dispatching `WebhookCall` with original URL/payload/secret, Retry button with spinner on webhook logs page, route at `POST /workspaces/{workspace}/webhooks/logs/{webhookLog}/retry`. *(4 tests, 8 assertions)*
+
+- **2026-03-12**: Task 112 (In-App Product Tour): added `tour_completed_at` timestamp column on users, `TourController::complete()` at `POST /tour/complete`, `use-tour.ts` hook with 4 steps (Dashboard → Team → Billing → Settings), `ProductTour` + `TourTooltip` components with backdrop/highlight ring/progress dots/Next+Skip+Done, mounted on dashboard for users without `tour_completed_at`. *(3 tests, 4 assertions)*
+
+- **2026-03-12**: Task 111 (Public Status Page): added `StatusIncident` model with `scopeRecent()`/`isActive()`/`isResolved()`, public `/status` page with overall status banner (operational/degraded/outage/maintenance), admin CRUD at `/admin/status` with inline create/edit form and auto-resolve logic, admin nav entry, 3 seeded sample incidents. *(17 tests, 114 assertions)*
+
+- **2026-03-12**: Task 110 (Admin Cohort Retention Analysis): added `CohortAnalysisController` with 6-month cohort table (3 retention months per cohort, colour-coded cells, average row), React triangular table page, route and admin nav entry. *(5 tests, 72 assertions)*
+
+- **2026-03-12**: Task 109 (Weekly Workspace Activity Digest): added `WeeklyWorkspaceDigestNotification` (mail + database with team-category/channel-preference guard), `app:send-weekly-digests` Artisan command computing member delta, activity count, and 3 most recent events per workspace, scheduled Monday 08:00 UTC. *(7 tests, 14 assertions)*
+
+- **2026-03-12**: Task 108 (Workspace Email Domain Restriction): added `allowed_email_domains` JSON column to workspaces, `isEmailDomainAllowed()` helper on Workspace model, domain enforcement in InvitationService and WorkspaceInviteLinkController, domain restriction card in workspace security settings UI, Acme Corporation demo workspace seeded with `acme.com` / `acmecorp.com` domains. *(11 tests, 18 assertions)*
 
 - **2026-03-07**: Task 107 (Team Invite-Link Capacity UX Sync): disabled Team invite-link creation action when `canInvite` is false so customers get immediate UI feedback at capacity, and added feature coverage validating `canInvite=false` at seat limit. *(1 test, 1 assertion)*
 

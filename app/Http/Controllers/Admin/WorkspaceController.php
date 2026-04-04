@@ -36,6 +36,7 @@ class WorkspaceController extends Controller
                 'slug' => $workspace->slug,
                 'personal_workspace' => $workspace->personal_workspace,
                 'plan' => $workspace->plan_name,
+                'plan_override' => $workspace->plan_override,
                 'users_count' => $workspace->users_count,
                 'owner' => $workspace->owner ? [
                     'id' => $workspace->owner->id,
@@ -93,5 +94,24 @@ class WorkspaceController extends Controller
         ]);
 
         return back()->with('success', 'Workspace unsuspended successfully.');
+    }
+
+    /**
+     * Set or clear the plan override for a workspace.
+     */
+    public function overridePlan(Request $request, Workspace $workspace): RedirectResponse
+    {
+        $validated = $request->validate([
+            'plan_override' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        $override = $validated['plan_override'] ?? null;
+        $workspace->update(['plan_override' => $override ?: null]);
+
+        $message = $override
+            ? "Plan override set to \"{$override}\" for {$workspace->name}."
+            : "Plan override cleared for {$workspace->name}.";
+
+        return back()->with('success', $message);
     }
 }

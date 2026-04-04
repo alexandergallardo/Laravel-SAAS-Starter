@@ -582,3 +582,338 @@ $this->app->singleton(Service::class, fn () => new Service(fn () => request()));
 - This codebase follows Spatie's Laravel & PHP guidelines.
 - Always activate the `spatie-laravel-php-standards` skill whenever writing, editing, reviewing, or formatting Laravel or PHP code.
 </laravel-boost-guidelines>
+
+---
+
+# Laravel SAAS Starter - Project Guidelines
+
+> A production-ready Laravel SaaS starter kit with authentication, billing, teams, and everything you need to launch faster.
+> **Built by XCO Agency** - https://xco.agency
+
+---
+
+## Project Overview
+
+This is a full-stack Laravel SaaS application featuring:
+
+- **Multi-tenant Workspace Architecture** - Users can create and manage multiple workspaces with team collaboration
+- **Stripe Billing Integration** - Subscription management via Laravel Cashier with seat-based pricing
+- **Complete Authentication System** - Laravel Fortify with 2FA, social login, password resets, and session management
+- **Admin Panel** - Global super-admin dashboard with user impersonation and system management
+- **Feature Flags** - Laravel Pennant for workspace-specific feature rollouts
+- **Audit Logging** - Spatie Activitylog for complete change tracking
+- **Real-time Features** - Laravel Reverb for WebSocket broadcasting
+- **AI Integration** - Laravel AI SDK for AI-powered features
+- **API Platform** - API key authentication with rate limiting and usage tracking
+
+---
+
+## Project Structure
+
+```
+├── app/
+│   ├── Actions/Fortify/          # Fortify authentication customizations
+│   ├── Console/Commands/          # Artisan commands
+│   ├── Events/                    # Event classes
+│   ├── Http/
+│   │   ├── Controllers/           # Web controllers
+│   │   │   ├── Auth/              # Authentication controllers
+│   │   │   ├── Admin/             # Admin panel controllers
+│   │   │   ├── Api/               # API controllers
+│   │   │   └── Settings/          # Settings controllers
+│   │   ├── Middleware/            # HTTP middleware
+│   │   ├── Requests/              # Form request validation
+│   │   └── Resources/             # API resources
+│   ├── Jobs/                      # Queue jobs
+│   ├── Listeners/                 # Event listeners
+│   ├── Mail/                      # Mailables
+│   ├── Models/                    # Eloquent models
+│   ├── Notifications/             # Notifications
+│   ├── Observers/                 # Model observers
+│   ├── Policies/                  # Authorization policies
+│   ├── Providers/                 # Service providers
+│   ├── Services/                  # Business logic
+│   │   ├── Business/              # Business services
+│   │   └── AI/                    # AI-related services
+│   └── Traits/                    # Reusable traits
+├── bootstrap/
+│   ├── app.php                    # Laravel 12 application configuration
+│   └── providers.php              # Service provider registration
+├── config/                        # Configuration files
+├── database/
+│   ├── factories/                 # Model factories
+│   ├── migrations/                # Database migrations
+│   └── seeders/                   # Database seeders
+├── docs/features/                 # Feature documentation (60+ docs)
+├── resources/
+│   ├── css/app.css                # Tailwind CSS v4 with custom theme
+│   ├── js/
+│   │   ├── actions/               # Wayfinder-generated actions
+│   │   ├── app.tsx                # Application entry point
+│   │   ├── components/            # React components (shadcn/ui + custom)
+│   │   ├── hooks/                 # Custom React hooks
+│   │   ├── layouts/               # Page layouts (admin, app, auth, settings)
+│   │   ├── locales/               # i18n translation files
+│   │   ├── pages/                 # Inertia.js page components
+│   │   ├── routes/                # Wayfinder-generated routes
+│   │   └── types/                 # TypeScript type definitions
+│   └── views/                     # Blade views (minimal)
+├── routes/
+│   ├── ai.php                     # MCP server routes
+│   ├── api.php                    # API routes
+│   ├── channels.php               # Broadcasting channels
+│   ├── console.php                # Console routes
+│   ├── settings.php               # Settings routes
+│   └── web.php                    # Web routes
+├── tests/
+│   ├── Feature/                   # Feature tests (1000+ tests)
+│   ├── Unit/                      # Unit tests
+│   └── Pest.php                   # Pest configuration
+└── stubs/                         # Code generation stubs
+```
+
+### Key Models
+
+- **User** - Application users with authentication
+- **Workspace** - Multi-tenant organizations
+- **WorkspaceInvitation** - Team invitation system
+- **WorkspaceApiKey** - API key management
+- **Announcement** - Global announcements
+- **FeatureFlag** - Pennant feature flags
+- **ConnectedAccount** - Social login accounts
+- **WebhookEndpoint/WebhookLog** - Webhook management
+- **ChangelogEntry** - Changelog system
+- **Feedback** - User feedback collection
+- **Ticket/TicketReply** - Support ticket system
+- **StatusIncident** - Status page incidents
+
+---
+
+## Development Commands
+
+### Setup
+
+```bash
+# Complete project setup
+composer run setup
+
+# Or step by step:
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+npm install
+npm run build
+```
+
+### Development Server
+
+```bash
+# Run all services (Laravel, Vite, Queue, Reverb, Logs)
+composer run dev
+
+# Run with SSR
+composer run dev:ssr
+
+# Individual services:
+php artisan serve       # Laravel server
+npm run dev             # Vite dev server
+php artisan queue:listen
+php artisan reverb:start
+```
+
+### Building
+
+```bash
+# Production build
+npm run build
+
+# SSR build
+npm run build:ssr
+```
+
+### Testing
+
+```bash
+# Run all tests
+php artisan test
+
+# Run with compact output
+php artisan test --compact
+
+# Run specific file
+php artisan test tests/Feature/Auth/LoginTest.php
+
+# Run with filter
+php artisan test --filter=can_login
+
+# Pest parallel testing
+php artisan test --parallel
+```
+
+### Code Quality
+
+```bash
+# PHP formatting (Laravel Pint)
+vendor/bin/pint
+vendor/bin/pint --dirty
+
+# Frontend formatting (Prettier)
+npm run format
+npm run format:check
+
+# TypeScript checking
+npm run types
+
+# ESLint
+npm run lint
+
+# Composer script
+composer pint
+```
+
+---
+
+## Key Architectural Patterns
+
+### Multi-tenancy via Workspaces
+
+- All resources belong to a `Workspace`
+- Users can belong to multiple workspaces via `workspace_user` pivot
+- Roles: `owner`, `admin`, `member`
+- Middleware ensures workspace context: `workspace`, `workspace.admin`, `workspace.owner`
+
+### Feature Flags (Pennant)
+
+```php
+use Laravel\Pennant\Feature;
+
+// Check feature
+if (Feature::active('new-feature')) {
+    // Show new feature
+}
+
+// Scoped to workspace
+Feature::for($workspace)->activate('beta-feature');
+```
+
+---
+
+## Security Considerations
+
+### Authentication & Authorization
+
+- **Laravel Fortify** - Handles login, registration, 2FA, password reset
+- **Two-Factor Authentication** - Required for certain workspaces (enforced via middleware)
+- **Password expiration** - Configurable password expiry (`AUTH_PASSWORD_EXPIRY_DAYS`)
+- **Workspace access control** - Middleware ensures users can only access their workspaces
+- **API Key authentication** - Separate middleware for API routes
+
+### CSRF Protection
+
+- Stripe webhook routes excluded from CSRF in `bootstrap/app.php`
+- All Inertia forms automatically include CSRF tokens
+
+### Data Protection
+
+- **GDPR compliance** - Data export and account deletion features
+- **Audit logging** - All changes tracked via Spatie Activitylog
+- **IP allowlists** - Workspace-level IP restrictions
+- **Session management** - Device tracking and session invalidation
+
+### Stripe Security
+
+- Webhook signature verification
+- Customer portal authenticated via signed URLs
+- Never log full card details
+
+---
+
+## CI/CD Pipeline
+
+### GitHub Actions Workflows
+
+| Workflow | Purpose |
+|----------|---------|
+| `tests.yml` | Run Pest tests on PHP 8.4 |
+| `lint.yml` | Run Pint, Prettier, ESLint |
+| `dependency-audit.yml` | Security audit for composer/npm |
+| `codeql.yml` | Static analysis |
+| `release.yml` | Automated releases with release-please |
+
+### Local CI Testing with `act`
+
+```bash
+# Run tests workflow
+act push -j ci -W .github/workflows/tests.yml
+
+# Run lint workflow
+act push -j quality -W .github/workflows/lint.yml
+```
+
+---
+
+## Environment Configuration
+
+### Required Environment Variables
+
+```bash
+# Application
+APP_NAME="Laravel SAAS Starter"
+APP_URL=http://localhost:8000
+APP_KEY=  # Generated via php artisan key:generate
+
+# Database
+DB_CONNECTION=sqlite  # or mysql, pgsql
+
+# Stripe (required for billing)
+STRIPE_KEY=pk_test_...
+STRIPE_SECRET=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Broadcasting (Reverb)
+REVERB_APP_ID=my-app-id
+REVERB_APP_KEY=my-app-key
+REVERB_APP_SECRET=my-app-secret
+
+# AI Providers (optional)
+# OPENAI_API_KEY=
+# ANTHROPIC_API_KEY=
+
+# Sentry (optional)
+SENTRY_LARAVEL_DSN=
+```
+
+---
+
+## Key Directories for Common Tasks
+
+| Task | Location |
+|------|----------|
+| Add a new page | `resources/js/pages/` |
+| Add a reusable component | `resources/js/components/` |
+| Add a controller | `app/Http/Controllers/` |
+| Add a model | `app/Models/` |
+| Add a migration | `database/migrations/` |
+| Add a test | `tests/Feature/` |
+| Add API routes | `routes/api.php` |
+| Add web routes | `routes/web.php` |
+| Add middleware | `app/Http/Middleware/` + register in `bootstrap/app.php` |
+| Feature documentation | `docs/features/` |
+
+---
+
+## Documentation
+
+Comprehensive feature documentation is available in `docs/features/`:
+
+- **Core**: Authentication, Workspaces, Team Management, Session Management
+- **Billing**: Stripe integration, Seat-based billing, Usage Dashboard
+- **Admin**: Admin Panel, Impersonation, System Health, Audit Logs
+- **Platform**: Announcements, Feature Flags, Webhooks, Real-time Notifications
+- **Security**: 2FA Enforcement, GDPR Data Export, Account Deletion
+- **API**: API Keys, Authentication, Documentation
+
+---
+
+*This AGENTS.md file is maintained alongside the codebase. For questions or updates, refer to the project maintainers at XCO Agency.*

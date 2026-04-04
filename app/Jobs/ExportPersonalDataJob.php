@@ -32,6 +32,8 @@ class ExportPersonalDataJob implements ShouldQueue
             'profile' => $this->user->toArray(),
             'workspaces' => $this->user->workspaces->toArray(),
             'connected_accounts' => $this->user->connectedAccounts->toArray(),
+            'login_history' => $this->user->loginActivities()->latest()->take(500)->get(['ip_address', 'user_agent', 'location', 'is_successful', 'created_at'])->toArray(),
+            'notifications' => $this->user->notifications()->latest()->take(500)->get(['id', 'type', 'data', 'read_at', 'created_at'])->toArray(),
         ];
 
         // Capture generic Activity Logs safely if available natively.

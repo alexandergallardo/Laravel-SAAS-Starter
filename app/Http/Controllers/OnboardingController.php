@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\OnboardingStepLog;
 use App\Services\WorkspaceService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -31,7 +30,7 @@ class OnboardingController extends Controller
     /**
      * Track an onboarding step event from the frontend.
      */
-    public function trackStep(Request $request): JsonResponse
+    public function trackStep(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'step' => ['required', 'string', 'in:welcome,workspace,plan'],
@@ -44,7 +43,7 @@ class OnboardingController extends Controller
             $validated['action'],
         );
 
-        return response()->json(['success' => true]);
+        return back();
     }
 
     /**

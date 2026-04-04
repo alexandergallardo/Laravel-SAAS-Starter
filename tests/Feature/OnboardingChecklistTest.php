@@ -69,8 +69,7 @@ it('marks invite_member as completed when workspace has more than one user', fun
 it('allows dismissing the onboarding checklist', function () {
     actingAs($this->user)
         ->postJson('/onboarding-checklist/dismiss')
-        ->assertOk()
-        ->assertJson(['success' => true]);
+        ->assertRedirect();
 
     $this->user->refresh();
     expect($this->user->onboarding_checklist_dismissed_at)->not->toBeNull();

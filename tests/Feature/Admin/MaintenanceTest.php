@@ -126,6 +126,9 @@ describe('Maintenance IP Whitelist Middleware', function () {
     });
 
     it('blocks non-whitelisted IP during maintenance mode', function () {
+        // Create a regular user (not superadmin) to test with
+        $regularUser = User::factory()->create(['is_superadmin' => false]);
+
         // Toggle maintenance mode on with a whitelisted IP
         $this->actingAs($this->superadmin)
             ->post('/admin/maintenance/toggle', [
@@ -134,8 +137,10 @@ describe('Maintenance IP Whitelist Middleware', function () {
 
         expect(app()->isDownForMaintenance())->toBeTrue();
 
-        // Make a request from a blocked IP
-        $response = $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.5'])->get('/');
+        // Make a request from a blocked IP as a regular user (not whitelisted, not superadmin)
+        $response = $this->actingAs($regularUser)
+            ->withServerVariables(['REMOTE_ADDR' => '10.0.0.5'])
+            ->get('/');
 
         // It should return 503 Maintenance Mode
         $response->assertStatus(503);

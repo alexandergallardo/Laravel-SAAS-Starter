@@ -38,6 +38,14 @@ class ImpersonationController extends Controller
         // Store the log ID so we can update the ended_at timestamp later
         $request->session()->put('impersonation_log_id', $log->id);
 
+        // Audit via Spatie activity log
+        activity()
+            ->causedBy(User::find($impersonatorId))
+            ->performedOn($user)
+            ->event('impersonated')
+            ->withProperties(['ip_address' => $request->ip()])
+            ->log("Admin impersonated user {$user->name}");
+
         // Login as the target user
         Auth::login($user);
 

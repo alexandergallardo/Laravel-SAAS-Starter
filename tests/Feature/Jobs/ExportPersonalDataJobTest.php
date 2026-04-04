@@ -77,3 +77,33 @@ it('implements ShouldQueue interface', function () {
     expect(ExportPersonalDataJob::class)
         ->toImplement(ShouldQueue::class);
 });
+
+it('includes login history and notifications in the export', function () {
+    $user = User::factory()->create();
+
+    Notification::fake();
+
+    $job = new ExportPersonalDataJob($user);
+    $job->handle();
+
+    $exportDir = Storage::disk('local')->path('exports');
+    $files = glob($exportDir.'/export_'.$user->id.'_*.zip');
+    expect($files)->not->toBeEmpty();
+
+    $zip = new ZipArchive;
+    if ($zip->open($files[0]) === true) {
+        $contents = $zip->getFromName('personal_data.json');
+        $zip->close();
+
+        expect($contents)->not->toBeFalse();
+        $data = json_decode($contents, true);
+        expect($data)->toHaveKey('login_history');
+        expect($data)->toHaveKey('notifications');
+        expect($data['login_history'])->toBeArray();
+        expect($data['notifications'])->toBeArray();
+    }
+
+    foreach ($files as $file) {
+        @unlink($file);
+    }
+});

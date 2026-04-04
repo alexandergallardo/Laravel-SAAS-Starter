@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Announcement;
 use App\Models\SeoMetadata;
+use App\Services\FeatureService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -83,7 +84,9 @@ class HandleInertiaRequests extends Middleware
                     'date_format' => $user->date_format ?? 'Y-m-d',
                     'notification_preferences' => $user->normalizedNotificationPreferences(),
                     'two_factor_confirmed_at' => $user->two_factor_confirmed_at,
+                    'tour_completed_at' => $user->tour_completed_at,
                     'created_at' => $user->created_at,
+                    'profile_completeness' => $user->profileCompletenessScore(),
                 ] : null,
                 'is_impersonating' => $request->session()->has('impersonated_by'),
             ],
@@ -110,6 +113,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'announcement' => Announcement::currentlyActive()->latest()->first()?->only('id', 'title', 'body', 'type', 'link_text', 'link_url', 'is_dismissible'),
             'seo' => fn () => SeoMetadata::forPath($request->path())?->only('title', 'description', 'keywords', 'og_title', 'og_description', 'og_image', 'og_type', 'twitter_card', 'twitter_site', 'twitter_creator', 'twitter_image'),
+            'features' => FeatureService::forFrontend(),
         ];
     }
 }

@@ -4,14 +4,48 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Workspace;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Activitylog\Models\Activity;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class WorkspaceActivityController extends Controller
 {
+    /**
+     * Return the last 5 activity log entries for the current workspace (dashboard widget).
+     */
+    public function feed(Request $request): JsonResponse
+    {
+        $workspace = $request->user()->currentWorkspace;
+
+        $activities = Activity::where(function ($q) use ($workspace) {
+            $q->where(function ($sub) use ($workspace) {
+                $sub->where('subject_type', Workspace::class)
+                    ->where('subject_id', $workspace->id);
+            })->orWhere(function ($sub) use ($workspace) {
+                $sub->where('properties->workspace_id', $workspace->id);
+            });
+        })
+            ->with('causer:id,name,email')
+            ->latest()
+            ->orderByDesc('id')
+            ->limit(5)
+            ->get()
+            ->map(fn (Activity $a) => [
+                'id' => $a->id,
+                'description' => $a->description,
+                'event' => $a->event,
+                'subject_type' => class_basename($a->subject_type ?? ''),
+                'causer_name' => $a->causer?->name ?? 'System',
+                'created_at' => $a->created_at?->diffForHumans(),
+            ]);
+
+        return response()->json(['activities' => $activities]);
+    }
+
     /**
      * Display workspace activity feed.
      */
@@ -68,5 +102,47 @@ class WorkspaceActivityController extends Controller
             'eventTypes' => $eventTypes,
             'currentFilter' => $eventFilter ?? 'all',
         ]);
+    }
+
+    /**
+     * Export workspace activity log as CSV.
+     */
+    public function export(Request $request, Workspace $workspace): StreamedResponse
+    {
+        Gate::authorize('viewActivityLogging', $workspace);
+
+        $activities = Activity::where(function ($q) use ($workspace) {
+            $q->where(function ($sub) use ($workspace) {
+                $sub->where('subject_type', Workspace::class)
+                    ->where('subject_id', $workspace->id);
+            })->orWhere(function ($sub) use ($workspace) {
+                $sub->where('properties->workspace_id', $workspace->id);
+            })->orWhere(function ($sub) use ($workspace) {
+                $sub->where('subject_type', User::class)
+                    ->whereIn('subject_id', $workspace->users()->pluck('users.id'));
+            });
+        })
+            ->with('causer:id,name,email')
+            ->latest()
+            ->get();
+
+        $filename = 'workspace-activity-'.now()->format('Y-m-d').'.csv';
+
+        return response()->streamDownload(function () use ($activities): void {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Date', 'Event', 'Causer', 'Subject Type', 'Description']);
+
+            foreach ($activities as $activity) {
+                fputcsv($handle, [
+                    $activity->created_at?->toDateTimeString(),
+                    $activity->event ?? '',
+                    $activity->causer?->name ?? 'System',
+                    class_basename($activity->subject_type ?? ''),
+                    $activity->description ?? '',
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv']);
     }
 }

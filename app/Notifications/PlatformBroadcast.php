@@ -78,6 +78,7 @@ class PlatformBroadcast extends Notification implements ShouldQueue
         return [
             'title' => $this->broadcast->subject,
             'message' => $this->broadcast->body,
+            'action_url' => $this->broadcast->action_url,
         ];
     }
 }
