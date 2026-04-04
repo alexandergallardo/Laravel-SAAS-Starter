@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import axios from 'axios';
 import { TrendingUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -14,12 +15,10 @@ export function WorkspaceRetentionWidget() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('/workspace-retention-insights', {
-            headers: { Accept: 'application/json' },
-        })
-            .then((r) => r.json())
-            .then((d) => {
-                setData(d);
+        axios
+            .get('/workspace-retention-insights')
+            .then(({ data }) => {
+                setData(data);
                 setLoading(false);
             })
             .catch(() => setLoading(false));

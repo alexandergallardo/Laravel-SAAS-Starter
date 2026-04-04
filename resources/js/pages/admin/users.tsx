@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import AdminLayout from '@/layouts/admin-layout';
 import { Head, router } from '@inertiajs/react';
+import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
 import {
     CheckCircle,
@@ -66,11 +67,9 @@ function UserNotesDialog({
         }
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setLoading(true);
-        fetch(`/admin/users/${userId}/notes`, {
-            headers: { Accept: 'application/json' },
-        })
-            .then((r) => r.json())
-            .then((data) => setNotes(data.notes ?? []))
+        axios
+            .get(`/admin/users/${userId}/notes`)
+            .then(({ data }) => setNotes(data.notes ?? []))
             .finally(() => setLoading(false));
     }, [open, userId]);
 
@@ -80,24 +79,15 @@ function UserNotesDialog({
             return;
         }
         setSubmitting(true);
-        const csrf =
-            document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
-                ?.content ?? '';
-        const res = await fetch(`/admin/users/${userId}/notes`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json',
-                'X-CSRF-TOKEN': csrf,
-            },
-            body: JSON.stringify({ note: newNote.trim() }),
-        });
-        if (res.ok) {
-            const data = await res.json();
+        try {
+            const { data } = await axios.post(`/admin/users/${userId}/notes`, {
+                note: newNote.trim(),
+            });
             setNotes((prev) => [data.note, ...prev]);
             setNewNote('');
+        } finally {
+            setSubmitting(false);
         }
-        setSubmitting(false);
     };
 
     const deleteNote = async (noteId: number) => {

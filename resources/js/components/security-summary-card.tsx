@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Spinner } from '@/components/ui/spinner';
+import axios from 'axios';
 import {
     AlertCircle,
     AlertTriangle,
@@ -96,19 +97,14 @@ export function SecuritySummaryCard() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch('/settings/security-summary', {
-            headers: { Accept: 'application/json' },
-        })
-            .then((res) => {
-                if (!res.ok) throw new Error('Failed to load security summary');
-                return res.json();
-            })
-            .then((data: SecuritySummaryData) => {
+        axios
+            .get<SecuritySummaryData>('/settings/security-summary')
+            .then(({ data }) => {
                 setData(data);
                 setLoading(false);
             })
             .catch((err) => {
-                setError(err.message);
+                setError(err.response?.data?.message ?? 'Failed to load security summary');
                 setLoading(false);
             });
     }, []);

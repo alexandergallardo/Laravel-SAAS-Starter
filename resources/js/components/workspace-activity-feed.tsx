@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import axios from 'axios';
 import { Activity } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -23,11 +24,9 @@ export function WorkspaceActivityFeed() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('/workspace-activity-feed', {
-            headers: { Accept: 'application/json' },
-        })
-            .then((r) => r.json())
-            .then((data) => {
+        axios
+            .get('/workspace-activity-feed')
+            .then(({ data }) => {
                 setActivities(data.activities ?? []);
                 setLoading(false);
             })

@@ -4,6 +4,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
+import axios from 'axios';
 import { Bell } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -32,9 +33,9 @@ export function ChangelogWidget() {
     const [loaded, setLoaded] = useState(false);
 
     useEffect(() => {
-        fetch('/changelog-widget', { headers: { Accept: 'application/json' } })
-            .then((r) => r.json())
-            .then((data) => {
+        axios
+            .get('/changelog-widget')
+            .then(({ data }) => {
                 setEntries(data.entries ?? []);
                 setHasUnread(data.has_unread ?? false);
                 setLoaded(true);
@@ -45,14 +46,7 @@ export function ChangelogWidget() {
     const handleOpen = (value: boolean) => {
         setOpen(value);
         if (value && hasUnread) {
-            const csrf =
-                document.querySelector<HTMLMetaElement>(
-                    'meta[name="csrf-token"]',
-                )?.content ?? '';
-            fetch('/changelog-widget/mark-read', {
-                method: 'POST',
-                headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
-            }).then(() => setHasUnread(false));
+            axios.post('/changelog-widget/mark-read').then(() => setHasUnread(false));
         }
     };
 

@@ -87,6 +87,14 @@
         "typescript": "^5.7.2",
         "vite": "^7.0.4"
     },
+    "pnpm": {
+        "overrides": {
+            "socket.io-parser": ">=4.2.6",
+            "flatted": ">=3.4.2",
+            "picomatch": ">=4.0.4",
+            "brace-expansion": ">=1.1.13"
+        }
+    },
     "optionalDependencies": {
         "@rollup/rollup-linux-x64-gnu": "4.9.5",
         "@rollup/rollup-win32-x64-msvc": "4.9.5",

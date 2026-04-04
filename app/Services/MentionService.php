@@ -34,8 +34,14 @@ class MentionService
         }
 
         // Find users that belong to this workspace with matching names/emails
-        return User::whereIn('name', $usernames)
-            ->orWhereIn('email', array_map(fn ($u) => $u.'@%', $usernames))
+        return User::where(function ($query) use ($usernames) {
+            $query->whereIn('name', $usernames)
+                ->orWhere(function ($q) use ($usernames) {
+                    foreach ($usernames as $username) {
+                        $q->orWhere('email', 'like', $username.'@%');
+                    }
+                });
+        })
             ->whereHas('workspaces', function ($query) use ($workspace) {
                 $query->where('workspaces.id', $workspace->id);
             })

@@ -4,9 +4,9 @@ namespace App\Console\Commands;
 
 use App\Models\Workspace;
 use App\Notifications\WeeklyWorkspaceDigestNotification;
-use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Spatie\Activitylog\Models\Activity;
 
 class PreviewWeeklyDigest extends Command
 {
@@ -104,7 +104,7 @@ class PreviewWeeklyDigest extends Command
      */
     private function activityCount(Workspace $workspace): int
     {
-        return DB::table('activity_log')
+        return Activity::query()
             ->where('subject_type', Workspace::class)
             ->where('subject_id', $workspace->id)
             ->where('created_at', '>=', now()->subDays(7))
@@ -118,16 +118,16 @@ class PreviewWeeklyDigest extends Command
      */
     private function recentEvents(Workspace $workspace): array
     {
-        return DB::table('activity_log')
+        return Activity::query()
             ->where('subject_type', Workspace::class)
             ->where('subject_id', $workspace->id)
             ->where('created_at', '>=', now()->subDays(7))
             ->orderByDesc('created_at')
             ->limit(3)
             ->get(['description', 'created_at'])
-            ->map(fn ($row) => [
-                'description' => $row->description,
-                'created_at' => Carbon::parse($row->created_at)->diffForHumans(),
+            ->map(fn ($activity) => [
+                'description' => $activity->description,
+                'created_at' => $activity->created_at->diffForHumans(),
             ])
             ->toArray();
     }

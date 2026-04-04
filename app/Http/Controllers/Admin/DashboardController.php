@@ -59,23 +59,34 @@ class DashboardController extends Controller
             ? round(($canceledLast30 / ($activeAtPeriodStart + $canceledLast30)) * 100, 1)
             : 0;
 
-        // Daily signups for the last 14 days (for sparkline chart)
-        $dailySignups = collect(range(13, 0))->map(function ($daysAgo) use ($now) {
+        // Daily signups for the last 14 days (1 query instead of 14)
+        $fourteenDaysAgo = $now->copy()->subDays(13)->startOfDay();
+        $signupCounts = User::where('created_at', '>=', $fourteenDaysAgo)
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as count'))
+            ->groupBy('date')
+            ->pluck('count', 'date');
+
+        $dailySignups = collect(range(13, 0))->map(function ($daysAgo) use ($now, $signupCounts) {
             $date = $now->copy()->subDays($daysAgo)->toDateString();
 
             return [
                 'date' => Carbon::parse($date)->format('M d'),
-                'count' => User::whereDate('created_at', $date)->count(),
+                'count' => $signupCounts->get($date, 0),
             ];
         })->values();
 
-        // Daily workspaces for the last 14 days
-        $dailyWorkspaces = collect(range(13, 0))->map(function ($daysAgo) use ($now) {
+        // Daily workspaces for the last 14 days (1 query instead of 14)
+        $workspaceCounts = Workspace::where('created_at', '>=', $fourteenDaysAgo)
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as count'))
+            ->groupBy('date')
+            ->pluck('count', 'date');
+
+        $dailyWorkspaces = collect(range(13, 0))->map(function ($daysAgo) use ($now, $workspaceCounts) {
             $date = $now->copy()->subDays($daysAgo)->toDateString();
 
             return [
                 'date' => Carbon::parse($date)->format('M d'),
-                'count' => Workspace::whereDate('created_at', $date)->count(),
+                'count' => $workspaceCounts->get($date, 0),
             ];
         })->values();
 
@@ -103,11 +114,28 @@ class DashboardController extends Controller
             }
         }
 
-        // 7-day sparkline data for metric cards
+        // 7-day sparkline data for metric cards (3 queries instead of 21)
+        $sevenDaysAgo = $now->copy()->subDays(6)->startOfDay();
+
+        $sparkUserCounts = User::where('created_at', '>=', $sevenDaysAgo)
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as count'))
+            ->groupBy('date')
+            ->pluck('count', 'date');
+
+        $sparkWorkspaceCounts = Workspace::where('created_at', '>=', $sevenDaysAgo)
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as count'))
+            ->groupBy('date')
+            ->pluck('count', 'date');
+
+        $sparkSubCounts = Subscription::where('created_at', '>=', $sevenDaysAgo)
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as count'))
+            ->groupBy('date')
+            ->pluck('count', 'date');
+
         $sparklines = [
-            'new_users' => collect(range(6, 0))->map(fn ($d) => User::whereDate('created_at', $now->copy()->subDays($d)->toDateString())->count())->values()->toArray(),
-            'new_workspaces' => collect(range(6, 0))->map(fn ($d) => Workspace::whereDate('created_at', $now->copy()->subDays($d)->toDateString())->count())->values()->toArray(),
-            'new_subscriptions' => collect(range(6, 0))->map(fn ($d) => Subscription::whereDate('created_at', $now->copy()->subDays($d)->toDateString())->count())->values()->toArray(),
+            'new_users' => collect(range(6, 0))->map(fn ($d) => $sparkUserCounts->get($now->copy()->subDays($d)->toDateString(), 0))->values()->toArray(),
+            'new_workspaces' => collect(range(6, 0))->map(fn ($d) => $sparkWorkspaceCounts->get($now->copy()->subDays($d)->toDateString(), 0))->values()->toArray(),
+            'new_subscriptions' => collect(range(6, 0))->map(fn ($d) => $sparkSubCounts->get($now->copy()->subDays($d)->toDateString(), 0))->values()->toArray(),
         ];
 
         return Inertia::render('admin/dashboard', [

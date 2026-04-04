@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { router } from '@inertiajs/react';
+import axios from 'axios';
 import {
     AlertCircle,
     CheckCircle,
@@ -69,19 +70,14 @@ export function SessionSummaryCard() {
     const [signingOut, setSigningOut] = useState(false);
 
     useEffect(() => {
-        fetch('/settings/session-summary', {
-            headers: { Accept: 'application/json' },
-        })
-            .then((res) => {
-                if (!res.ok) throw new Error('Failed to load session summary');
-                return res.json();
-            })
-            .then((data: SessionSummaryData) => {
+        axios
+            .get<SessionSummaryData>('/settings/session-summary')
+            .then(({ data }) => {
                 setData(data);
                 setLoading(false);
             })
             .catch((err) => {
-                setError(err.message);
+                setError(err.response?.data?.message ?? 'Failed to load session summary');
                 setLoading(false);
             });
     }, []);
