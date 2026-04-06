@@ -18,8 +18,8 @@ importers:
         specifier: ^2.2.0
         version: 2.2.9(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@inertiajs/react':
-        specifier: ^3.0.1
-        version: 3.0.1(axios@1.14.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: ^3.0.2
+        version: 3.0.2(axios@1.14.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@radix-ui/react-avatar':
         specifier: ^1.1.3
         version: 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -554,16 +554,16 @@ packages:
     resolution: {integrity: sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==}
     engines: {node: '>=18.18'}
 
-  '@inertiajs/core@3.0.1':
-    resolution: {integrity: sha512-Fm6w6t9zfUKAWZuzPYVufo7gx5d3EO3OSMLUgP/3KgxX3H/9UNbuvy6dR+pzrWS7OtW/L3TAZfpCXAAb1FlhEA==}
+  '@inertiajs/core@3.0.2':
+    resolution: {integrity: sha512-ZBfV4HK5zjPC76VQ42WcgFdPmtO8zi+fzdkFBF0uM7EVwC5MSS8UITg8Yon4lb/i0X9bE3Ym16uHzgcPP1lL3Q==}
     peerDependencies:
       axios: ^1.13.2
     peerDependenciesMeta:
       axios:
         optional: true
 
-  '@inertiajs/react@3.0.1':
-    resolution: {integrity: sha512-mV2kTuxKLN7+iVO9uYmeLqJCMqLXqmwkiQScoEocx1LcbmffomnoxEwNcexA5XFtIyu2pKgPUIe6evrcsi96eg==}
+  '@inertiajs/react@3.0.2':
+    resolution: {integrity: sha512-gEJ8vpXpxxZ3ZMiYISn0RggggX54My7VpOU4kR7dEPdPBlIJSieZKHAgyt4klFSzxdNSK2QWpE4kqsWVMh7YNg==}
     peerDependencies:
       react: ^19.0.0
       react-dom: ^19.0.0
@@ -3841,7 +3841,7 @@ snapshots:
 
   '@humanwhocodes/retry@0.4.3': {}
 
-  '@inertiajs/core@3.0.1(axios@1.14.0)':
+  '@inertiajs/core@3.0.2(axios@1.14.0)':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       es-toolkit: 1.45.1
@@ -3849,9 +3849,9 @@ snapshots:
     optionalDependencies:
       axios: 1.14.0
 
-  '@inertiajs/react@3.0.1(axios@1.14.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@inertiajs/react@3.0.2(axios@1.14.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
-      '@inertiajs/core': 3.0.1(axios@1.14.0)
+      '@inertiajs/core': 3.0.2(axios@1.14.0)
       es-toolkit: 1.45.1
       laravel-precognition: 2.0.0(axios@1.14.0)
       react: 19.2.4
