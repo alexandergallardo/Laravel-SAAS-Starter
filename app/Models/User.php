@@ -188,6 +188,20 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Mark the user as having completed onboarding.
+     */
+    public function completeOnboarding(): void
+    {
+        if ($this->onboarded_at !== null) {
+            return;
+        }
+
+        $this->forceFill([
+            'onboarded_at' => now(),
+        ])->save();
+    }
+
+    /**
      * Get the user's avatar URL with fallback.
      */
     public function getAvatarUrlAttribute($value): ?string

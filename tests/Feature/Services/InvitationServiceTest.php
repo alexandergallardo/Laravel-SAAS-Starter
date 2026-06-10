@@ -53,7 +53,7 @@ it('throws exception if user is already a member', function () {
 })->throws(InvalidArgumentException::class, 'This user is already a member of the workspace.');
 
 it('can accept an invitation', function () {
-    $invitedUser = User::factory()->create();
+    $invitedUser = User::factory()->unonboarded()->create();
     $invitation = WorkspaceInvitation::create([
         'workspace_id' => $this->workspace->id,
         'email' => $invitedUser->email,
@@ -65,6 +65,7 @@ it('can accept an invitation', function () {
     expect($result)->toBeTrue();
     expect($invitedUser->fresh()->belongsToWorkspace($this->workspace))->toBeTrue();
     expect($invitedUser->fresh()->current_workspace_id)->toBe($this->workspace->id);
+    expect($invitedUser->fresh()->onboarded_at)->not->toBeNull();
     expect(WorkspaceInvitation::find($invitation->id))->toBeNull();
 });
 

@@ -207,7 +207,7 @@ describe('Public Invite Link Page', function () {
 describe('Joining via Invite Link', function () {
     it('allows authenticated user to join workspace', function () {
         $link = WorkspaceInviteLink::generateLink($this->workspace, $this->owner);
-        $newUser = User::factory()->create();
+        $newUser = User::factory()->unonboarded()->create();
         // Create personal workspace for the new user
         $personalWs = Workspace::factory()->create([
             'owner_id' => $newUser->id,
@@ -222,6 +222,13 @@ describe('Joining via Invite Link', function () {
 
         expect($this->workspace->fresh()->hasUser($newUser))->toBeTrue();
         expect($link->fresh()->uses_count)->toBe(1);
+
+        $newUser->refresh();
+        expect($newUser->onboarded_at)->not->toBeNull()
+            ->and($newUser->ownedWorkspaces()->count())->toBe(1)
+            ->and($newUser->ownedWorkspaces()->first()->personal_workspace)->toBeTrue();
+
+        $this->actingAs($newUser)->get('/dashboard')->assertSuccessful();
     });
 
     it('does not allow joining same workspace twice', function () {

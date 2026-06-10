@@ -76,6 +76,8 @@ class InvitationService
         // Switch user to the new workspace
         $user->switchWorkspace($workspace);
 
+        $user->completeOnboarding();
+
         // Delete the invitation
         $invitation->delete();
 

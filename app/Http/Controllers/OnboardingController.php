@@ -71,9 +71,7 @@ class OnboardingController extends Controller
         ]);
 
         // 2. Mark the account formally onboarded
-        $user->forceFill([
-            'onboarded_at' => now(),
-        ])->save();
+        $user->completeOnboarding();
 
         // 3. Log onboarding completion
         $this->logStep($user->id, 'plan', 'completed');

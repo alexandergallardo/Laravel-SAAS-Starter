@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\User;
+use App\Models\Workspace;
+use App\Models\WorkspaceInvitation;
 
 it('violently redirects unonboarded users to the wizard', function () {
     $user = User::factory()->unonboarded()->create();
@@ -67,6 +69,30 @@ it('redirects paid-intent onboarding users to billing plan selection', function 
         'owner_id' => $user->id,
         'personal_workspace' => false,
     ]);
+});
+
+it('does not create an owned workspace when user joins via invitation', function () {
+    $owner = User::factory()->create();
+    $workspace = Workspace::factory()->create(['owner_id' => $owner->id]);
+    $user = User::factory()->unonboarded()->create();
+
+    $invitation = WorkspaceInvitation::create([
+        'workspace_id' => $workspace->id,
+        'email' => $user->email,
+        'role' => 'member',
+        'token' => 'onboarding-skip-token',
+        'expires_at' => now()->addDays(7),
+    ]);
+
+    $this->actingAs($user)->post("/invitations/{$invitation->token}/accept");
+
+    $user->refresh();
+
+    $ownedWorkspaceCount = $user->ownedWorkspaces()->count();
+
+    $this->actingAs($user)->get('/dashboard')->assertSuccessful();
+
+    expect($user->fresh()->ownedWorkspaces()->count())->toBe($ownedWorkspaceCount);
 });
 
 it('allows seamlessly onboarded users into the dashboard securely bypassing the wizard', function () {
