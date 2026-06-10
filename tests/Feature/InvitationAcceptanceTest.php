@@ -51,12 +51,15 @@ it('redirects gracefully when user is already a member', function () {
     $response->assertRedirect(route('dashboard'));
     $response->assertSessionHas('info');
     expect(WorkspaceInvitation::find($invitation->id))->toBeNull();
+
+    $user->refresh();
+    expect($user->onboarded_at)->not->toBeNull();
 });
 
 it('accepts a valid invitation and joins the workspace', function () {
     $owner = User::factory()->create();
     $workspace = Workspace::factory()->create(['owner_id' => $owner->id]);
-    $user = User::factory()->create();
+    $user = User::factory()->unonboarded()->create();
 
     $invitation = WorkspaceInvitation::create([
         'workspace_id' => $workspace->id,
@@ -72,6 +75,12 @@ it('accepts a valid invitation and joins the workspace', function () {
     $response->assertSessionHas('success');
     expect($workspace->hasUser($user))->toBeTrue();
     expect(WorkspaceInvitation::find($invitation->id))->toBeNull();
+
+    $user->refresh();
+    expect($user->onboarded_at)->not->toBeNull()
+        ->and($user->ownedWorkspaces()->count())->toBe(0);
+
+    $this->actingAs($user)->get('/dashboard')->assertSuccessful();
 });
 
 it('renders the invitation accept page for a valid token', function () {

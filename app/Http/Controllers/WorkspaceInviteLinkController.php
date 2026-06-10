@@ -101,6 +101,8 @@ class WorkspaceInviteLinkController extends Controller
 
         // Check if user is already a member
         if ($workspace->hasUser($user)) {
+            $user->completeOnboarding();
+
             return redirect()->route('dashboard')->with('info', 'You are already a member of this workspace.');
         }
 
@@ -119,6 +121,7 @@ class WorkspaceInviteLinkController extends Controller
         $workspace->addUser($user, $link->role);
         $link->incrementUses();
         $user->switchWorkspace($workspace);
+        $user->completeOnboarding();
 
         return redirect()->route('dashboard')->with('success', "You've joined {$workspace->name}!");
     }

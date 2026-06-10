@@ -72,6 +72,7 @@ class InvitationController extends Controller
 
         if ($invitation->workspace->hasUser($user)) {
             $invitation->delete();
+            $user->completeOnboarding();
 
             return redirect()->route('dashboard')
                 ->with('info', 'You are already a member of '.$invitation->workspace->name.'.');
