@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+
 it('adds an X-Request-Id header to web responses', function () {
     $response = $this->get('/');
 
@@ -26,4 +28,15 @@ it('adds an X-Request-Id header to api responses even on a 401', function () {
     $response->assertUnauthorized();
     $response->assertHeader('X-Request-Id');
     expect($response->headers->get('X-Request-Id'))->not->toBeEmpty();
+});
+
+it('echoes the X-Request-Id on error responses when an exception aborts the pipeline', function () {
+    Route::get('/__requestid_boom', function () {
+        throw new RuntimeException('boom');
+    });
+
+    $response = $this->get('/__requestid_boom', ['X-Request-Id' => 'error-correlation-456']);
+
+    $response->assertServerError();
+    $response->assertHeader('X-Request-Id', 'error-correlation-456');
 });

@@ -75,9 +75,13 @@ return Application::configure(basePath: dirname(__DIR__))
             $status = $response->getStatusCode();
 
             if (in_array($status, [403, 404, 429, 500, 503], true) && $request->header('X-Inertia')) {
-                return Inertia::render('error', ['status' => $status])
+                $response = Inertia::render('error', ['status' => $status])
                     ->toResponse($request)
                     ->setStatusCode($status);
+            }
+
+            if ($id = $request->headers->get('X-Request-Id')) {
+                $response->headers->set('X-Request-Id', $id);
             }
 
             return $response;
