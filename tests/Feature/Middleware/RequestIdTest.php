@@ -2,7 +2,7 @@
 
 use App\Http\Middleware\RequestId;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Context;
 
 it('adds an X-Request-Id header to the response when none is provided', function () {
     $middleware = new RequestId;
@@ -26,16 +26,12 @@ it('echoes an inbound X-Request-Id back unchanged', function () {
     expect($request->attributes->get('request_id'))->toBe('inbound-request-id');
 });
 
-it('pushes the request id into the log context', function () {
-    Log::spy();
-
+it('pushes the request id into the context', function () {
     $middleware = new RequestId;
     $request = Request::create('/test');
     $request->headers->set('X-Request-Id', 'inbound-request-id');
 
     $middleware->handle($request, fn () => response('ok'));
 
-    Log::shouldHaveReceived('withContext')
-        ->once()
-        ->with(['request_id' => 'inbound-request-id']);
+    expect(Context::get('request_id'))->toBe('inbound-request-id');
 });
