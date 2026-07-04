@@ -11,25 +11,26 @@ use Symfony\Component\HttpFoundation\Response;
 class RequestId
 {
     /**
-     * Attach a request id to the request, response and log context.
+     * Assign a correlation id to the request and echo it on the response.
      *
      * Honors an inbound X-Request-Id header when present, otherwise generates
-     * an ordered UUID. The id is pushed into the request Context so it is
-     * appended to every log entry and propagated to any queued jobs.
+     * a fresh UUID. The id is pushed into the request context so every log
+     * line emitted during the request carries a request_id.
      *
      * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $requestId = $request->header('X-Request-Id') ?: (string) Str::orderedUuid();
+        $inbound = trim((string) $request->headers->get('X-Request-Id'));
+        $id = $inbound !== '' ? Str::limit($inbound, 128, '') : Str::uuid()->toString();
 
-        $request->attributes->set('request_id', $requestId);
+        Context::add('request_id', $id);
 
-        Context::add('request_id', $requestId);
+        $request->headers->set('X-Request-Id', $id);
 
         $response = $next($request);
 
-        $response->headers->set('X-Request-Id', $requestId);
+        $response->headers->set('X-Request-Id', $id);
 
         return $response;
     }
