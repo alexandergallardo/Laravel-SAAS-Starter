@@ -12,6 +12,7 @@ use App\Http\Middleware\EnsureWorkspaceOwner;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
+use App\Http\Middleware\RequestId;
 use App\Http\Middleware\RequireTwoFactor;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\TrackLastSeen;
@@ -44,12 +45,17 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->web(append: [
+            RequestId::class,
             SetLocale::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
             EnsurePasswordNotExpired::class,
             TrackLastSeen::class,
+        ]);
+
+        $middleware->api(append: [
+            RequestId::class,
         ]);
 
         $middleware->alias([
