@@ -29,6 +29,8 @@ export interface FormatDateOptions {
     withTime?: boolean;
     /** Returned when the input is empty or unparseable; defaults to `''`. */
     fallback?: string;
+    /** Preferred locale for month names (e.g. `en-US`, `fr-FR`); defaults to `en-US`. */
+    locale?: string | null;
 }
 
 const DEFAULT_TIMEZONE = 'UTC';
@@ -51,6 +53,26 @@ function toDate(value: DateInput): Date | null {
     return Number.isNaN(date.getTime()) ? null : date;
 }
 
+const DEFAULT_LOCALE = 'en-US';
+
+/**
+ * Resolve a usable BCP 47 locale, falling back to `en-US` when the preference is
+ * empty or a structurally invalid tag (which would otherwise make
+ * `Intl.DateTimeFormat` throw), keeping the formatter's no-throw guarantee.
+ */
+function resolveLocale(locale?: string | null): string {
+    if (!locale) {
+        return DEFAULT_LOCALE;
+    }
+
+    try {
+        Intl.DateTimeFormat.supportedLocalesOf(locale);
+        return locale;
+    } catch {
+        return DEFAULT_LOCALE;
+    }
+}
+
 /**
  * Extract zero-padded year/month/day and a short month name for the given date
  * in the target timezone. Falls back to `UTC` when the timezone is invalid so a
@@ -59,8 +81,10 @@ function toDate(value: DateInput): Date | null {
 function zonedParts(
     date: Date,
     timeZone: string,
+    locale?: string | null,
 ): { year: string; month: string; day: string; monthShort: string } {
     let zone = timeZone;
+    const activeLocale = resolveLocale(locale);
 
     const build = (tz: string) => {
         const parts = new Intl.DateTimeFormat('en-US', {
@@ -77,15 +101,15 @@ function zonedParts(
             }
         }
 
-        const monthShort = new Intl.DateTimeFormat('en-US', {
+        const monthShort = new Intl.DateTimeFormat(activeLocale, {
             timeZone: tz,
             month: 'short',
         }).format(date);
 
         return {
-            year: map.year,
-            month: map.month,
-            day: map.day,
+            year: map.year ?? '',
+            month: map.month ?? '',
+            day: map.day ?? '',
             monthShort,
         };
     };
@@ -145,7 +169,13 @@ export function formatDate(
     value: DateInput,
     options: FormatDateOptions = {},
 ): string {
-    const { timezone, dateFormat, withTime = false, fallback = '' } = options;
+    const {
+        timezone,
+        dateFormat,
+        withTime = false,
+        fallback = '',
+        locale,
+    } = options;
 
     const date = toDate(value);
     if (!date) {
@@ -155,7 +185,7 @@ export function formatDate(
     const zone = timezone || DEFAULT_TIMEZONE;
     const token = isSupportedToken(dateFormat) ? dateFormat : DEFAULT_FORMAT;
 
-    const formatted = assemble(token, zonedParts(date, zone));
+    const formatted = assemble(token, zonedParts(date, zone, locale));
 
     return withTime ? `${formatted} ${zonedTime(date, zone)}` : formatted;
 }
