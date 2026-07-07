@@ -191,6 +191,19 @@ describe('Admin Ticket Portal', function () {
         );
     });
 
+    it('ignores an array status filter instead of throwing a warning', function () {
+        Ticket::factory()->create(['status' => 'open']);
+        Ticket::factory()->create(['status' => 'closed']);
+
+        $response = $this->actingAs($this->superAdmin)->get('/admin/tickets?status[]=open');
+
+        $response->assertSuccessful();
+        $response->assertInertia(fn ($page) => $page
+            ->component('admin/tickets/index')
+            ->has('tickets.data', 2)
+        );
+    });
+
     it('non-admin cannot view admin tickets index page', function () {
         $response = $this->actingAs($this->user)->get('/admin/tickets');
 

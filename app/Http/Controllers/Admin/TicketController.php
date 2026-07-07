@@ -20,8 +20,7 @@ class TicketController extends Controller
     {
         $query = Ticket::query()->with(['user:id,name,email,avatar_url']);
 
-        // Filter by status if provided, ignoring any unknown value
-        if ($status = TicketStatus::tryFrom((string) $request->status)) {
+        if (is_string($request->status) && $status = TicketStatus::tryFrom($request->status)) {
             $query->where('status', $status);
         }
 
