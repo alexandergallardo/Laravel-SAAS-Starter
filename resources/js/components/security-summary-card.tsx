@@ -1,3 +1,4 @@
+import { Github, Google } from '@/components/brand-icons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,8 +16,6 @@ import {
     AlertTriangle,
     ArrowRight,
     CheckCircle,
-    Chrome,
-    Github,
     Key,
     Lock,
     Shield,
@@ -54,7 +53,7 @@ const ProviderIcons: Record<
     React.ComponentType<{ className?: string }>
 > = {
     github: Github,
-    google: Chrome,
+    google: Google,
 };
 
 function getScoreColor(score: number): string {
@@ -104,7 +103,10 @@ export function SecuritySummaryCard() {
                 setLoading(false);
             })
             .catch((err) => {
-                setError(err.response?.data?.message ?? 'Failed to load security summary');
+                setError(
+                    err.response?.data?.message ??
+                        'Failed to load security summary',
+                );
                 setLoading(false);
             });
     }, []);
