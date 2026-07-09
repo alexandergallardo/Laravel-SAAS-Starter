@@ -18,14 +18,21 @@ class TicketController extends Controller
      */
     public function index(Request $request): Response
     {
-        $tickets = $request->user()->tickets()
-            ->withCount('replies')
+        $query = $request->user()->tickets()->withCount('replies');
+
+        if (is_string($request->status) && $status = TicketStatus::tryFrom($request->status)) {
+            $query->where('status', $status);
+        }
+
+        $tickets = $query
             ->orderByRaw(TicketPriority::sortOrderByRaw())
             ->latest()
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
         return Inertia::render('settings/tickets/index', [
             'tickets' => $tickets,
+            'filters' => $request->only(['status']),
         ]);
     }
 

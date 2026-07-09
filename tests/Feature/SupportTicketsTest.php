@@ -33,6 +33,80 @@ describe('User Ticket Portal', function () {
         $response->assertInertia(fn ($page) => $page->component('settings/tickets/index'));
     });
 
+    it('requires authentication to view the tickets index page', function () {
+        $response = $this->get('/settings/tickets');
+
+        $response->assertRedirect('/login');
+    });
+
+    it('filters the tickets index to only the users own matching status', function () {
+        Ticket::factory()->count(2)->create([
+            'user_id' => $this->user->id,
+            'workspace_id' => $this->workspace->id,
+            'status' => 'open',
+        ]);
+        Ticket::factory()->create([
+            'user_id' => $this->user->id,
+            'workspace_id' => $this->workspace->id,
+            'status' => 'closed',
+        ]);
+
+        $response = $this->actingAs($this->user)->get('/settings/tickets?status=open');
+
+        $response->assertSuccessful();
+        $response->assertInertia(fn ($page) => $page
+            ->component('settings/tickets/index')
+            ->has('tickets.data', 2)
+            ->where('tickets.data.0.status', 'open')
+            ->where('tickets.data.1.status', 'open')
+        );
+    });
+
+    it('falls back to all of the users tickets for an unknown status filter', function () {
+        Ticket::factory()->create([
+            'user_id' => $this->user->id,
+            'workspace_id' => $this->workspace->id,
+            'status' => 'open',
+        ]);
+        Ticket::factory()->create([
+            'user_id' => $this->user->id,
+            'workspace_id' => $this->workspace->id,
+            'status' => 'closed',
+        ]);
+
+        $response = $this->actingAs($this->user)->get('/settings/tickets?status=bogus');
+
+        $response->assertSuccessful();
+        $response->assertInertia(fn ($page) => $page
+            ->component('settings/tickets/index')
+            ->has('tickets.data', 2)
+        );
+    });
+
+    it('never includes another users tickets for any status filter', function () {
+        $otherUser = User::factory()->create();
+        Ticket::factory()->count(3)->create([
+            'user_id' => $otherUser->id,
+            'status' => 'open',
+        ]);
+        Ticket::factory()->create([
+            'user_id' => $this->user->id,
+            'workspace_id' => $this->workspace->id,
+            'status' => 'open',
+        ]);
+
+        foreach (['open', 'bogus', ''] as $status) {
+            $response = $this->actingAs($this->user)->get('/settings/tickets?status='.$status);
+
+            $response->assertSuccessful();
+            $response->assertInertia(fn ($page) => $page
+                ->component('settings/tickets/index')
+                ->has('tickets.data', 1)
+                ->where('tickets.data.0.user_id', $this->user->id)
+            );
+        }
+    });
+
     it('lists tickets ordered by priority, most urgent first', function () {
         foreach (['normal', 'urgent', 'low', 'high'] as $priority) {
             Ticket::factory()->create([
