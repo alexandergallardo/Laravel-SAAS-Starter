@@ -72,6 +72,7 @@ Route::middleware('auth')->group(function () {
 
     // Login Activity
     Route::get('settings/login-history', [LoginActivityController::class, 'index'])->name('login-history.index');
+    Route::get('settings/login-history/export', [LoginActivityController::class, 'export'])->name('login-history.export');
 
     // Tickets
     Route::controller(TicketController::class)->group(function () {
