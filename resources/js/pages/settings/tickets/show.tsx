@@ -3,10 +3,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/components/ui/toast';
 import AppLayout from '@/layouts/app-layout';
 import ProfileLayout from '@/layouts/settings/profile-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface User {
@@ -53,6 +54,8 @@ export default function TicketShow({ ticket }: ShowProps) {
         content: '',
     });
 
+    const { addToast } = useToast();
+
     const getStatusColor = (status: TicketData['status']) => {
         switch (status) {
             case 'open':
@@ -84,6 +87,28 @@ export default function TicketShow({ ticket }: ShowProps) {
         post(`/settings/tickets/${ticket.id}/replies`, {
             onSuccess: () => reset('content'),
         });
+    };
+
+    const closeTicket = () => {
+        router.post(
+            `/settings/tickets/${ticket.id}/close`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => addToast('Ticket closed.', 'success'),
+            },
+        );
+    };
+
+    const reopenTicket = () => {
+        router.post(
+            `/settings/tickets/${ticket.id}/reopen`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => addToast('Ticket reopened.', 'success'),
+            },
+        );
     };
 
     return (
@@ -123,6 +148,19 @@ export default function TicketShow({ ticket }: ShowProps) {
                                     {ticket.priority.toUpperCase()}
                                 </Badge>
                             </div>
+                        </div>
+                        <div className="flex gap-2">
+                            {ticket.status !== 'closed' && (
+                                <Button variant="outline" onClick={closeTicket}>
+                                    Close Ticket
+                                </Button>
+                            )}
+                            {(ticket.status === 'closed' ||
+                                ticket.status === 'resolved') && (
+                                <Button onClick={reopenTicket}>
+                                    Reopen Ticket
+                                </Button>
+                            )}
                         </div>
                     </div>
 

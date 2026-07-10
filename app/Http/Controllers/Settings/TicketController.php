@@ -6,6 +6,7 @@ use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -95,5 +96,37 @@ class TicketController extends Controller
         }
 
         return back()->with('success', 'Reply submitted successfully.');
+    }
+
+    /**
+     * Close the specified ticket.
+     */
+    public function close(Request $request, Ticket $ticket): RedirectResponse
+    {
+        if ($ticket->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        if ($ticket->status !== TicketStatus::Closed) {
+            $ticket->update(['status' => TicketStatus::Closed]);
+        }
+
+        return back()->with('success', 'Support ticket closed successfully.');
+    }
+
+    /**
+     * Reopen the specified ticket.
+     */
+    public function reopen(Request $request, Ticket $ticket): RedirectResponse
+    {
+        if ($ticket->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        if (in_array($ticket->status, [TicketStatus::Resolved, TicketStatus::Closed], true)) {
+            $ticket->update(['status' => TicketStatus::Open]);
+        }
+
+        return back()->with('success', 'Support ticket reopened successfully.');
     }
 }

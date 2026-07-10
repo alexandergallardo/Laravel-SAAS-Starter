@@ -80,6 +80,8 @@ Route::middleware('auth')->group(function () {
         Route::post('settings/tickets', 'store')->name('settings.tickets.store');
         Route::get('settings/tickets/{ticket}', 'show')->name('settings.tickets.show');
         Route::post('settings/tickets/{ticket}/replies', 'storeReply')->name('settings.tickets.reply.store');
+        Route::post('settings/tickets/{ticket}/close', 'close')->name('settings.tickets.close');
+        Route::post('settings/tickets/{ticket}/reopen', 'reopen')->name('settings.tickets.reopen');
     });
 
     // Connected Accounts
