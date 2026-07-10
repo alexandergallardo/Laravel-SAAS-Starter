@@ -23,7 +23,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import ProfileLayout from '@/layouts/settings/profile-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { MessageSquare, Plus } from 'lucide-react';
 import { useState } from 'react';
@@ -43,15 +43,40 @@ interface IndexProps {
         data: TicketData[];
         links: unknown[];
     };
+    filters: {
+        status?: string;
+    };
 }
 
-export default function TicketsIndex({ tickets }: IndexProps) {
+const statusFilters: { label: string; value: string }[] = [
+    { label: 'All', value: '' },
+    { label: 'Open', value: 'open' },
+    { label: 'In Progress', value: 'in_progress' },
+    { label: 'Resolved', value: 'resolved' },
+    { label: 'Closed', value: 'closed' },
+];
+
+export default function TicketsIndex({ tickets, filters }: IndexProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Support Tickets',
             href: '/settings/tickets',
         },
     ];
+
+    const activeStatus = filters.status ?? '';
+
+    const handleStatusFilter = (status: string) => {
+        router.get(
+            '/settings/tickets',
+            { status: status || undefined },
+            {
+                preserveState: true,
+                replace: true,
+                preserveScroll: true,
+            },
+        );
+    };
 
     const [isOpen, setIsOpen] = useState(false);
     const { data, setData, post, processing, errors, reset, clearErrors } =
@@ -241,6 +266,24 @@ export default function TicketsIndex({ tickets }: IndexProps) {
                                 </form>
                             </DialogContent>
                         </Dialog>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                        {statusFilters.map((filter) => (
+                            <Button
+                                key={filter.value || 'all'}
+                                type="button"
+                                size="sm"
+                                variant={
+                                    activeStatus === filter.value
+                                        ? 'default'
+                                        : 'outline'
+                                }
+                                onClick={() => handleStatusFilter(filter.value)}
+                            >
+                                {filter.label}
+                            </Button>
+                        ))}
                     </div>
 
                     {tickets.data.length > 0 ? (
