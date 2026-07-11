@@ -1,3 +1,4 @@
+import { index } from '@/actions/App/Http/Controllers/Settings/TicketController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -68,8 +69,8 @@ export default function TicketsIndex({ tickets, filters }: IndexProps) {
 
     const handleStatusFilter = (status: string) => {
         router.get(
-            '/settings/tickets',
-            { status: status || undefined },
+            index.url({ query: status ? { status } : {} }),
+            {},
             {
                 preserveState: true,
                 replace: true,
